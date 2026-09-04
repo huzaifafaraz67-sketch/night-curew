@@ -1,0 +1,1522 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+===============================================================================
+  THE MIDNIGHT CURFEW  -  v3  "HIGH-FIDELITY BUILD"
+  Three.js first-person horror, single self-contained file
+===============================================================================
+
+  STORY (updated)
+  ---------------
+  Leo Vance is nine years old. Since Dad left, Mom takes the 11 PM to 6 AM
+  shift at the packing plant, so Leo spends his nights alone in apartment 4B
+  at the end of Kessler Row.
+
+  Two weeks ago the neighbours' girl, Ada, was babysitting Leo when she
+  answered the front door at 2 AM. Nobody has seen her since. The police
+  found her shoes in the hallway, still laced, pointing at the wall.
+
+  Afterwards Grandma came over, taped a sheet of notebook paper to the fridge
+  and made Mom promise to read it out loud every night. Five rules. The thing
+  that lives in the hallway of 4B cannot come in on its own - it can only be
+  invited, and it spends every night learning new ways to sound like family.
+  It copies voices. It knocks politely. It waits for you to look at it, and
+  the moment it knows you can see it, it stops pretending.
+
+  Tonight is Night 1 without a babysitter. Mom's shift ends at 6:00 AM.
+  Six hours. Five rules. One flashlight with a dying battery.
+
+  THE FIVE MIDNIGHT RULES
+  -----------------------
+  1. If the hallway light is ON, do not look down the hallway.
+  2. Mom comes home at 6:00 AM. Anyone knocking before then is not Mom.
+  3. If you hear your own name from the kitchen, hide in the closet until it stops.
+  4. Never open the fridge twice in the same hour.
+  5. Whatever is in the hallway must not learn that you can see it.
+
+  RECOMMENDED PROJECT FOLDER STRUCTURE
+  ------------------------------------
+  midnight-curfew/
+  |
+  |-- index.html
+  |-- css/style.css
+  |-- js/main.js
+  `-- assets/            (textures, audio, models)
+
+  CONTROLS
+  --------
+  Main menu . . . . mouse click (START NIGHT / STORY / RULES / RETRO / SOUND)
+  W A S D . . . . . move            SHIFT . . . run
+  Mouse . . . . . . look            F  . . . . . flashlight
+  E . . . . . . . . interact / close reading overlay
+  ESC . . . . . . . close overlay / release pointer
+  R . . . . . . . . restart after an ending
+
+  WHAT'S NEW IN v3
+  ----------------
+  * High-fidelity pass: MeshStandardMaterial + procedurally generated canvas
+    textures (tiles, wallpaper, wood, static), real-time shadow mapping,
+    ACES filmic tone mapping, soft PCF shadows, higher render resolution.
+    The old 320x240 PS1 look is still available as a RETRO FILTER toggle.
+  * Full animation layer: skeletal-style walk cycle on the entity, animated
+    fridge / closet / front doors, swaying curtain, animated TV static,
+    breathing + head-bob camera, flashlight sway with inertia, door-knock
+    shake, and an animated 3D main-menu camera fly-around.
+  * Main menu with an animated live 3D background and procedural ambient
+    sound (WebAudio: room drone, fridge hum, wind, creaks, knocks, phone
+    ring, heartbeat). No external audio files required.
+===============================================================================
+-->
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#000000" />
+<title>The Midnight Curfew</title>
+<style>
+/* ================= css/style.css ================= */
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#e6e0d0;
+  font-family:"Courier New",Courier,monospace;-webkit-user-select:none;user-select:none;
+  overscroll-behavior:none;-webkit-tap-highlight-color:transparent}
+#game{position:fixed;inset:0}
+#game canvas{display:block;width:100%!important;height:100%!important}
+body.retro #game canvas{image-rendering:pixelated;image-rendering:crisp-edges}
+body.retro #film{opacity:.55}
+
+/* subtle film layer (kept very light in HD mode) */
+#film{position:fixed;inset:0;z-index:4;pointer-events:none;opacity:.18;
+  background:radial-gradient(ellipse at center,rgba(0,0,0,0) 55%,rgba(0,0,0,.9) 100%),
+    repeating-linear-gradient(0deg,rgba(0,0,0,.25) 0 2px,rgba(0,0,0,0) 2px 4px)}
+
+/* crosshair + HUD */
+#cross{position:fixed;left:50%;top:50%;width:12px;height:12px;z-index:6;
+  transform:translate(-50%,-50%);pointer-events:none;opacity:.65;display:none}
+#cross:before,#cross:after{content:"";position:absolute;background:#fff}
+#cross:before{left:50%;top:0;width:2px;height:100%;transform:translateX(-50%)}
+#cross:after{top:50%;left:0;height:2px;width:100%;transform:translateY(-50%)}
+.hud{position:fixed;z-index:6;pointer-events:none;text-shadow:0 0 5px #000;
+  font-size:13px;letter-spacing:1px;display:none}
+body.playing .hud,body.playing #cross{display:block}
+#hudL{left:16px;bottom:14px;line-height:1.8}
+#hudR{right:16px;bottom:14px;text-align:right;line-height:1.8}
+#obj{left:50%;top:16px;transform:translateX(-50%)}
+#obj b{color:#9fd0b0}
+.bar{display:inline-block;width:92px;height:8px;border:1px solid #6b6450;vertical-align:middle}
+.bar i{display:block;height:100%;background:#d8c86a;transition:width .2s}
+#sanBar i{background:#b0574a}
+#clock{color:#9fd0b0;font-size:17px;letter-spacing:2px}
+#prompt{position:fixed;left:50%;top:57%;transform:translateX(-50%);z-index:6;font-size:15px;
+  padding:7px 14px;border:1px solid #6b6450;background:rgba(10,10,12,.5);display:none;
+  pointer-events:none;letter-spacing:1px;backdrop-filter:blur(2px)}
+#subs{position:fixed;left:50%;bottom:78px;transform:translateX(-50%);z-index:6;max-width:66vw;
+  text-align:center;font-size:15px;color:#f2ecd8;pointer-events:none;text-shadow:0 0 6px #000;
+  opacity:0;transition:opacity .35s}
+#vflash{position:fixed;inset:0;z-index:7;background:#fff;opacity:0;pointer-events:none;
+  transition:opacity .13s}
+#vblood{position:fixed;inset:0;z-index:5;pointer-events:none;opacity:0;transition:opacity .6s;
+  background:radial-gradient(ellipse at center,rgba(0,0,0,0) 40%,rgba(120,10,10,.55) 100%)}
+/* ============ MAIN MENU ============ */
+#menu{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;
+  justify-content:center;padding:0 8vw;
+  background:linear-gradient(90deg,rgba(4,4,8,.92) 0%,rgba(4,4,8,.72) 45%,rgba(4,4,8,.15) 100%)}
+#menu .kicker{font-size:12px;letter-spacing:6px;color:#8e8776;margin-bottom:10px}
+#menu h1{font-size:clamp(30px,7vw,74px);line-height:.95;letter-spacing:5px;color:#efe7d0;
+  text-shadow:4px 4px 0 #5d1212,0 0 40px rgba(0,0,0,.9);margin-bottom:6px}
+#menu h1 span{display:block;color:#c9c0a6;font-size:.52em;letter-spacing:12px;
+  text-shadow:2px 2px 0 #3d0d0d}
+#menu .tag{font-size:13px;color:#9a9382;letter-spacing:2px;margin-bottom:26px}
+#menu nav{display:flex;flex-direction:column;gap:2px;max-width:330px}
+.mi{position:relative;text-align:left;background:none;border:0;color:#cfc8b6;font:inherit;
+  font-size:17px;letter-spacing:3px;padding:9px 10px 9px 30px;cursor:pointer;
+  transition:color .15s,background .15s,padding .15s}
+.mi:before{content:"\25B8";position:absolute;left:8px;opacity:0;transition:opacity .15s}
+.mi:hover,.mi:focus-visible{color:#fff5dd;background:rgba(160,40,30,.22);outline:none;padding-left:34px}
+.mi:hover:before,.mi:focus-visible:before{opacity:1}
+.mi small{color:#7f7969;letter-spacing:1px;font-size:11px;margin-left:8px}
+#menu .legal{position:absolute;bottom:16px;left:8vw;font-size:11px;color:#6f6959;letter-spacing:1px}
+#audioHint{position:absolute;bottom:16px;right:8vw;font-size:11px;color:#6f6959;letter-spacing:1px}
+
+/* ============ PANELS (story / rules / how to play) ============ */
+.panel{position:fixed;inset:0;z-index:30;display:none;padding:6vh 6vw;overflow:auto;
+  background:rgba(3,3,6,.95)}
+.panel .sheet{max-width:780px;margin:0 auto;border:1px solid #6b6450;padding:28px 32px;
+  background:linear-gradient(180deg,#181720,#0a0a0e);box-shadow:0 0 60px rgba(0,0,0,.8)}
+.panel h2{font-size:22px;letter-spacing:5px;color:#e9e1c9;margin-bottom:6px}
+.panel .note{font-size:12px;color:#8f8878;letter-spacing:1px;margin-bottom:20px}
+.panel p{font-size:14px;line-height:1.85;color:#cfc8b6;margin-bottom:14px}
+.panel ol{list-style:none;counter-reset:r}
+.panel li{counter-increment:r;position:relative;padding:10px 0 10px 46px;font-size:15px;
+  line-height:1.6;border-bottom:1px dashed #34312b;color:#d5ceba}
+.panel li:before{content:counter(r,decimal-leading-zero);position:absolute;left:0;top:9px;
+  color:#b04a3a}
+.panel .foot{margin-top:20px;font-size:12px;color:#8f8878;letter-spacing:1px}
+.panel .close{margin-top:16px;font-size:13px;color:#f0e9d4;letter-spacing:2px;cursor:pointer;
+  animation:blink 1.3s steps(2) infinite}
+@keyframes blink{50%{opacity:.25}}
+
+/* ============ ENDINGS ============ */
+.screen{position:fixed;inset:0;z-index:25;display:none;flex-direction:column;align-items:center;
+  justify-content:center;gap:14px;text-align:center;padding:6vw;
+  background:radial-gradient(ellipse at center,rgba(24,16,16,.9) 0%,#000 82%)}
+.screen h1{font-size:clamp(26px,6vw,58px);letter-spacing:7px}
+#over h1{color:#e3bab2;text-shadow:3px 3px 0 #4a0f0f}
+#win h1{color:#d3e7d3;text-shadow:3px 3px 0 #14401f}
+.screen .sub{font-size:13px;letter-spacing:2px;color:#a09989;max-width:620px;line-height:1.9}
+.screen .cta{margin-top:8px;font-size:16px;letter-spacing:4px;color:#f0e9d4;
+  border:1px solid #6a6350;padding:10px 22px;animation:blink 1.2s steps(2) infinite}
+#loadfail{position:fixed;inset:0;z-index:99;display:none;align-items:center;justify-content:center;
+  text-align:center;padding:8vw;background:#000;font-size:14px;line-height:1.9}
+
+/* ============ FADE + TIMER + CREDITS ============ */
+#fade{position:fixed;inset:0;z-index:15;background:#000;opacity:0;pointer-events:none;
+  transition:opacity 1.4s ease}
+#timer{position:fixed;left:50%;top:34%;transform:translateX(-50%);z-index:8;display:none;
+  font-size:44px;letter-spacing:6px;color:#e46a52;text-shadow:0 0 18px #000;pointer-events:none}
+#timer small{display:block;font-size:14px;letter-spacing:3px;color:#e9e1c9;text-align:center}
+#credits{position:fixed;inset:0;z-index:40;display:none;overflow:hidden;background:#000}
+#credits .roll{position:absolute;left:0;right:0;top:100%;text-align:center;
+  animation:roll 46s linear forwards}
+@keyframes roll{to{top:-190%}}
+#credits h2{font-size:clamp(24px,5vw,46px);letter-spacing:8px;color:#efe7d0;margin-bottom:8px;
+  text-shadow:3px 3px 0 #5d1212}
+#credits .sec{margin:44px 0}
+#credits .lbl{font-size:12px;letter-spacing:5px;color:#8e8776;margin-bottom:8px}
+#credits .val{font-size:16px;letter-spacing:2px;color:#d8d0bc;line-height:1.9}
+#credits .end{position:absolute;bottom:18px;left:0;right:0;text-align:center;font-size:13px;
+  letter-spacing:3px;color:#efe7d0;animation:blink 1.4s steps(2) infinite}
+
+/* ============ INSIDE-THE-CUPBOARD VIEW ============ */
+#hideView{position:fixed;inset:0;z-index:5;pointer-events:none;opacity:0;transition:opacity .35s;
+  background:
+    linear-gradient(90deg,#000 0%,#000 43%,rgba(0,0,0,.15) 49%,rgba(0,0,0,.15) 51%,#000 57%,#000 100%),
+    radial-gradient(ellipse at center,rgba(0,0,0,.2) 30%,#000 85%)}
+body.hiding #hideView{opacity:1}
+
+/* ============ TOUCH CONTROLS (phone / tablet) ============ */
+#touch{position:fixed;inset:0;z-index:9;display:none;touch-action:none}
+body.touch.playing #touch{display:block}
+#stick{position:absolute;left:5vw;bottom:6vh;width:34vw;max-width:180px;aspect-ratio:1;
+  border:2px solid rgba(220,210,190,.35);border-radius:50%;background:rgba(0,0,0,.22)}
+#nub{position:absolute;left:50%;top:50%;width:38%;aspect-ratio:1;border-radius:50%;
+  transform:translate(-50%,-50%);background:rgba(230,222,200,.4);border:2px solid rgba(255,255,255,.5)}
+#look{position:absolute;right:0;top:0;width:60%;height:100%}
+.tbtn{position:absolute;right:4vw;width:20vw;max-width:104px;aspect-ratio:1;border-radius:50%;
+  border:2px solid rgba(220,210,190,.45);background:rgba(12,12,16,.5);color:#efe7d0;
+  font:inherit;font-size:13px;letter-spacing:2px;display:flex;align-items:center;justify-content:center;
+  text-align:center;user-select:none;-webkit-user-select:none}
+.tbtn:active{background:rgba(160,40,30,.55)}
+#bUse{bottom:22vh}
+#bLight{bottom:6vh;right:28vw}
+#bRun{bottom:6vh}
+#bPause{position:absolute;left:4vw;top:3vh;width:auto;aspect-ratio:auto;border-radius:4px;
+  padding:8px 14px;font-size:12px}
+
+/* phone-friendly HUD scaling */
+@media (max-width:820px),(pointer:coarse){
+  .hud{font-size:11px;letter-spacing:.5px}
+  #hudL{left:10px;bottom:auto;top:8px}
+  #hudR{right:10px;bottom:auto;top:8px}
+  #obj{top:auto;bottom:2vh;font-size:11px;max-width:92vw;text-align:center}
+  #prompt{top:52%;font-size:13px;padding:5px 10px}
+  #subs{bottom:34vh;font-size:13px;max-width:86vw}
+  #timer{font-size:34px;top:26%}
+  #menu{padding:0 7vw;background:linear-gradient(180deg,rgba(4,4,8,.9),rgba(4,4,8,.72))}
+  #menu nav{max-width:none}
+  .mi{font-size:15px;padding:12px 10px 12px 28px}
+  .panel{padding:4vh 4vw}
+  .panel .sheet{padding:20px 18px}
+  .panel li,.panel p{font-size:13px}
+  #audioHint,#menu .legal{position:static;margin-top:14px;text-align:left}
+}
+</style>
+</head>
+<body>
+<div id="game"></div>
+<div id="film"></div>
+<div id="vblood"></div>
+<div id="vflash"></div>
+<div id="cross"></div>
+
+<div class="hud" id="obj">OBJECTIVE: <b id="objText">Read the rules on the fridge</b></div>
+<div class="hud" id="hudL">
+  FLASHLIGHT <span id="fl">OFF</span>
+  <span class="bar" id="batBar"><i style="width:100%"></i></span><br>
+  NERVE <span class="bar" id="sanBar"><i style="width:100%"></i></span><br>
+  <span style="color:#8d8676">[F] light &nbsp; [E] use &nbsp; [SHIFT] run &nbsp; [ESC] pause</span>
+</div>
+<div class="hud" id="hudR"><span id="clock">12:00 AM</span><br>
+  <span id="state" style="color:#8d8676">kitchen</span></div>
+<div id="prompt">Press [E] to Read Rules</div>
+<div id="subs"></div>
+<div id="fade"></div>
+<div id="hideView"></div>
+<div id="timer">5<small>HIDE IN THE CUPBOARD</small></div>
+
+<!-- ===== ON-SCREEN CONTROLS (phone) ===== -->
+<div id="touch">
+  <div id="look"></div>
+  <div id="stick"><div id="nub"></div></div>
+  <button class="tbtn" id="bUse">USE</button>
+  <button class="tbtn" id="bLight">LIGHT</button>
+  <button class="tbtn" id="bRun">RUN</button>
+  <button class="tbtn" id="bPause">MENU</button>
+</div>
+
+<!-- ===== MAIN MENU ===== -->
+<div id="menu">
+  <div class="kicker">APARTMENT 4B / KESSLER ROW / NIGHT 1</div>
+  <h1>THE MIDNIGHT<span>CURFEW</span></h1>
+  <div class="tag">Mom's shift ends at 6:00 AM. Five rules until then.</div>
+  <nav>
+    <button class="mi" id="btnStart">START NIGHT <small>click to lock mouse</small></button>
+    <button class="mi" id="btnStory">STORY</button>
+    <button class="mi" id="btnRules">THE FIVE RULES</button>
+    <button class="mi" id="btnHow">HOW TO PLAY</button>
+    <button class="mi" id="btnRetro">RETRO FILTER <small id="retroState">OFF</small></button>
+    <button class="mi" id="btnSound">SOUND <small id="soundState">ON</small></button>
+  </nav>
+  <div class="legal">Three.js r160 &middot; procedural audio &middot; no external assets</div>
+  <div id="audioHint">click anywhere to enable ambient sound</div>
+</div>
+<!-- ===== PANELS ===== -->
+<div class="panel" id="pStory"><div class="sheet">
+  <h2>STORY</h2>
+  <div class="note">apartment 4B, Kessler Row &mdash; two weeks after</div>
+  <p>Leo Vance is nine. Since Dad left, Mom works the 11 PM to 6 AM shift at the packing
+  plant, so the nights belong to Leo and the long hallway outside his kitchen.</p>
+  <p>Two weeks ago Ada from 4C was babysitting. At 2 AM someone knocked and said it was
+  Mom. Ada opened the door. The police found her shoes in the hallway, still laced,
+  pointing at the wall.</p>
+  <p>Grandma taped a sheet of notebook paper to the fridge and made Mom promise to read
+  it out loud every night. The thing in the hallway cannot come inside on its own &mdash;
+  it has to be invited. So it practises. It copies voices, it knocks politely, and it
+  waits for you to look at it. The moment it knows you can see it, it stops pretending.</p>
+  <p>Tonight there is no babysitter. Six hours, five rules, one flashlight with a dying
+  battery.</p>
+  <div class="foot">Mom's shift ends at 6:00 AM. Stay inside. Stay on the list.</div>
+  <div class="close" data-close="pStory">[E] / [ESC] / click to close</div>
+</div></div>
+
+<div class="panel" id="pRules"><div class="sheet">
+  <h2>THE MIDNIGHT RULES</h2>
+  <div class="note">taped to the fridge door &mdash; Grandma's handwriting</div>
+  <ol>
+    <li>If the hallway light is ON, do not look down the hallway.</li>
+    <li>Mom comes home at 6:00 AM. Anyone knocking before then is not Mom.</li>
+    <li>If you hear your own name from the kitchen, hide in the closet until it stops.</li>
+    <li>Never open the fridge twice in the same hour.</li>
+    <li>Whatever is in the hallway must not learn that you can see it.</li>
+  </ol>
+  <div class="foot">Leo &mdash; I love you. Just do the list. I'll be home before sunrise.</div>
+  <div class="close" data-close="pRules">[E] / [ESC] / click to close</div>
+</div></div>
+
+<div class="panel" id="pHow"><div class="sheet">
+  <h2>HOW TO PLAY</h2>
+  <div class="note">survive from 12:00 AM to 6:00 AM</div>
+  <ol>
+    <li>WASD to move, SHIFT to run, mouse to look. ESC releases the mouse.</li>
+    <li>[F] toggles the flashlight. The battery drains and flickers when low.</li>
+    <li>[E] interacts with anything highlighted within reach: fridge, notes, light switch, TV, phone, closet, front door.</li>
+    <li>NERVE drops while you break a rule and slowly recovers when you behave. At zero, the night ends badly.</li>
+    <li>When it calls your name, get into the closet and press [E]. Come out only when it goes quiet.</li>
+    <li>Never open the front door before 6:00 AM. At exactly 6:00 AM, open it.</li>
+  </ol>
+  <div class="foot">Tip: the TV masks sound and adds light, but light attracts attention.</div>
+  <div class="close" data-close="pHow">[E] / [ESC] / click to close</div>
+</div></div>
+
+<!-- reading overlay used in-game -->
+<div class="panel" id="pRead"><div class="sheet">
+  <h2 id="rTitle">THE MIDNIGHT RULES</h2>
+  <div class="note" id="rNote"></div>
+  <ol id="rList"></ol>
+  <div class="foot" id="rFoot"></div>
+  <div class="close" data-close="pRead">[E] or [ESC] to close</div>
+</div></div>
+
+<!-- ===== ENDINGS ===== -->
+<div class="screen" id="over">
+  <h1>IT FOUND YOU</h1>
+  <div class="sub" id="overWhy">you broke a rule</div>
+  <div class="cta">PRESS [R] TO TRY AGAIN</div>
+</div>
+<div class="screen" id="win">
+  <h1>6:00 AM</h1>
+  <div class="sub">Real keys turn in the real lock. Mom smells like cardboard and cold air.
+    She reads the list out loud again before she sleeps.<br>NIGHT 1 SURVIVED.</div>
+  <div class="cta">PRESS [R] TO PLAY AGAIN</div>
+</div>
+
+<!-- ===== CREDITS ===== -->
+<div id="credits">
+  <div class="roll">
+    <div class="sec"><h2>THE MIDNIGHT CURFEW</h2>
+      <div class="val">NIGHT 1 &mdash; COMPLETE</div></div>
+    <div class="sec"><div class="lbl">SURVIVED BY</div>
+      <div class="val">Leo Vance, age 9<br>Apartment 4B, Kessler Row</div></div>
+    <div class="sec"><div class="lbl">THE FIVE RULES</div>
+      <div class="val">Do not look down the lit hallway<br>Nobody knocking before 6 AM is Mom<br>
+        Hide when it calls your name<br>Never open the fridge twice in an hour<br>
+        Never let it learn that you can see it</div></div>
+    <div class="sec"><div class="lbl">IN MEMORY OF</div>
+      <div class="val">Ada, 4C &mdash; who answered the door</div></div>
+    <div class="sec"><div class="lbl">ENGINE</div><div class="val">Three.js r160</div></div>
+    <div class="sec"><div class="lbl">GRAPHICS</div>
+      <div class="val">Procedural canvas textures<br>Real-time shadow mapping<br>
+        ACES filmic tone mapping<br>Optional PS1 retro filter</div></div>
+    <div class="sec"><div class="lbl">AUDIO</div>
+      <div class="val">Procedural WebAudio<br>room drone &middot; fridge hum &middot; wind &middot; knocks</div></div>
+    <div class="sec"><div class="lbl">ANIMATION</div>
+      <div class="val">Hand-keyed walk cycle<br>Hinged doors &middot; swaying curtain &middot; camera breathing</div></div>
+    <div class="sec"><div class="lbl">AND FINALLY</div>
+      <div class="val">Mom got home at 6:00 AM.<br>She read the list out loud again.<br>
+        Night 2 is tomorrow.</div></div>
+  </div>
+  <div class="end">PRESS [R] TO PLAY AGAIN</div>
+</div>
+
+<div id="loadfail"><div>
+  <div style="color:#c04a3a;letter-spacing:3px;margin-bottom:10px">ENGINE FAILED TO LOAD</div>
+  Three.js could not be fetched from the CDN.<br>
+  Check your connection, or serve the folder locally
+  (<code>python3 -m http.server</code>) and open http://localhost:8000
+</div></div>
+
+<script>
+  window.__gameBooted=false;
+  setTimeout(function(){if(!window.__gameBooted)document.getElementById('loadfail').style.display='flex';},7000);
+</script>
+
+<script type="importmap">
+{"imports":{
+  "three":"https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"
+}}
+</script>
+<!-- ================= js/main.js ================= -->
+<script type="module">
+import * as THREE from 'three';
+import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+
+const $ = id => document.getElementById(id);
+
+/* touch / phone detection */
+const IS_TOUCH = matchMedia('(pointer:coarse)').matches || 'ontouchstart' in window;
+if(IS_TOUCH) document.body.classList.add('touch');
+
+/* =========================================================
+   1. RENDERER  -  HD by default, optional retro downscale
+========================================================= */
+const renderer = new THREE.WebGLRenderer({ antialias:true, powerPreference:'high-performance' });
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.15;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+$('game').appendChild(renderer.domElement);
+
+let retro = false;
+const QUALITY = IS_TOUCH ? 0.72 : 1;          // internal resolution scale on phones
+function resize(){
+  if(retro){
+    renderer.setPixelRatio(1);
+    renderer.setSize(320,240,false);
+    camera.aspect = 4/3;
+  } else {
+    renderer.setPixelRatio(Math.min(devicePixelRatio, IS_TOUCH?1.5:2)*QUALITY);
+    renderer.setSize(innerWidth,innerHeight,false);
+    camera.aspect = innerWidth/innerHeight;
+  }
+  camera.updateProjectionMatrix();
+}
+
+/* =========================================================
+   2. PROCEDURAL TEXTURES (canvas based, no external assets)
+========================================================= */
+function canvasTex(w,h,draw,repX=1,repY=1){
+  const c=document.createElement('canvas'); c.width=w; c.height=h;
+  draw(c.getContext('2d'),w,h);
+  const t=new THREE.CanvasTexture(c);
+  t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(repX,repY);
+  t.anisotropy=8; t.colorSpace=THREE.SRGBColorSpace;
+  return t;
+}
+function noiseOverlay(ctx,w,h,alpha,size=1){
+  for(let i=0;i<(w*h)/(size*size)/2;i++){
+    ctx.fillStyle='rgba(0,0,0,'+(Math.random()*alpha).toFixed(3)+')';
+    ctx.fillRect(Math.random()*w,Math.random()*h,size,size);
+  }
+}
+/* kitchen lino tiles */
+const texFloor = canvasTex(256,256,(c,w,h)=>{
+  c.fillStyle='#6d5b46'; c.fillRect(0,0,w,h);
+  for(let y=0;y<2;y++)for(let x=0;x<2;x++){
+    c.fillStyle=(x+y)%2?'#7a6750':'#5f4f3c';
+    c.fillRect(x*w/2,y*h/2,w/2,h/2);
+  }
+  c.strokeStyle='rgba(0,0,0,.45)'; c.lineWidth=3;
+  for(let i=0;i<=2;i++){c.beginPath();c.moveTo(i*w/2,0);c.lineTo(i*w/2,h);c.stroke();
+    c.beginPath();c.moveTo(0,i*h/2);c.lineTo(w,i*h/2);c.stroke();}
+  noiseOverlay(c,w,h,.22,2);
+},6,6);
+/* striped wallpaper */
+const texWall = canvasTex(256,256,(c,w,h)=>{
+  c.fillStyle='#8b8377'; c.fillRect(0,0,w,h);
+  for(let x=0;x<w;x+=16){ c.fillStyle=(x/16)%2?'#7e7669':'#918978'; c.fillRect(x,0,8,h); }
+  c.fillStyle='rgba(60,40,25,.18)';
+  for(let i=0;i<26;i++) c.fillRect(Math.random()*w,Math.random()*h,Math.random()*40,Math.random()*7);
+  noiseOverlay(c,w,h,.2,2);
+},3,1.4);
+/* hallway plaster */
+const texHall = canvasTex(256,256,(c,w,h)=>{
+  c.fillStyle='#5d5852'; c.fillRect(0,0,w,h);
+  for(let i=0;i<70;i++){ c.strokeStyle='rgba(0,0,0,.16)'; c.lineWidth=Math.random()*2;
+    c.beginPath(); c.moveTo(Math.random()*w,Math.random()*h);
+    c.lineTo(Math.random()*w,Math.random()*h); c.stroke(); }
+  noiseOverlay(c,w,h,.3,2);
+},3,2);
+/* wood grain */
+const texWood = canvasTex(256,256,(c,w,h)=>{
+  c.fillStyle='#7a5636'; c.fillRect(0,0,w,h);
+  for(let y=0;y<h;y+=4){
+    c.strokeStyle='rgba(50,30,15,'+(0.1+Math.random()*0.25).toFixed(2)+')';
+    c.lineWidth=1+Math.random()*2; c.beginPath();
+    c.moveTo(0,y+Math.sin(y*0.2)*3); c.bezierCurveTo(w/3,y+6,2*w/3,y-6,w,y+Math.cos(y*.15)*3);
+    c.stroke();
+  }
+  noiseOverlay(c,w,h,.15,2);
+},2,2);
+/* enamel (fridge) */
+const texEnamel = canvasTex(128,128,(c,w,h)=>{
+  c.fillStyle='#dcd8c8'; c.fillRect(0,0,w,h); noiseOverlay(c,w,h,.1,1);
+});
+/* handwritten note */
+const texNote = canvasTex(128,160,(c,w,h)=>{
+  c.fillStyle='#f3edd7'; c.fillRect(0,0,w,h);
+  c.strokeStyle='#c8bfa2'; for(let y=16;y<h;y+=14){c.beginPath();c.moveTo(6,y);c.lineTo(w-6,y);c.stroke();}
+  c.fillStyle='#3a3a44';
+  for(let y=14;y<h-8;y+=14){ let x=10; while(x<w-14){ const l=6+Math.random()*22;
+    c.fillRect(x,y-5,l,2.4); x+=l+5; } }
+  c.fillStyle='#a33'; c.fillRect(8,4,w-16,3);
+});
+/* animated TV static */
+const tvCanvas=document.createElement('canvas'); tvCanvas.width=tvCanvas.height=96;
+const tvCtx=tvCanvas.getContext('2d');
+const texTV=new THREE.CanvasTexture(tvCanvas);
+function drawStatic(){
+  const img=tvCtx.createImageData(96,96);
+  for(let i=0;i<img.data.length;i+=4){
+    const v=40+Math.random()*215;
+    img.data[i]=v*0.75; img.data[i+1]=v*0.92; img.data[i+2]=v; img.data[i+3]=255;
+  }
+  tvCtx.putImageData(img,0,0);
+  tvCtx.fillStyle='rgba(255,255,255,.10)';
+  tvCtx.fillRect(0,(performance.now()/9)%96,96,7);
+  texTV.needsUpdate=true;
+}
+
+/* =========================================================
+   3. SCENE / CAMERA / LIGHTS
+========================================================= */
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x10141c);
+scene.fog = new THREE.FogExp2(0x10141c, 0.045);
+
+const camera = new THREE.PerspectiveCamera(72, 16/9, 0.05, 120);
+camera.position.set(0,1.55,4);
+
+const ambient = new THREE.AmbientLight(0xa8bcd8, 0.55); scene.add(ambient);
+const hemi = new THREE.HemisphereLight(0xa9bede, 0x40372c, 0.55); scene.add(hemi);
+
+const bulb = new THREE.PointLight(0xffdcae, 14, 18, 2);
+bulb.position.set(0,2.55,-1); bulb.castShadow=true;
+bulb.shadow.mapSize.set(IS_TOUCH?512:1024,IS_TOUCH?512:1024); bulb.shadow.bias=-0.004; scene.add(bulb);
+const shade = new THREE.Mesh(new THREE.ConeGeometry(0.34,0.28,10,1,true),
+  new THREE.MeshStandardMaterial({color:0x2c2c33,roughness:.8,side:THREE.DoubleSide}));
+shade.position.set(0,2.66,-1); scene.add(shade);
+const glassBulb = new THREE.Mesh(new THREE.SphereGeometry(0.08,10,8),
+  new THREE.MeshStandardMaterial({color:0xffe6bb,emissive:0xffd9a0,emissiveIntensity:2.4,roughness:.4}));
+glassBulb.position.set(0,2.5,-1); scene.add(glassBulb);
+
+const counterLight = new THREE.PointLight(0xffe3c0, 6, 12, 2);
+counterLight.position.set(-3.2,2.4,3.0); scene.add(counterLight);
+const moon = new THREE.DirectionalLight(0x93aade, 0.75);
+moon.position.set(9,7,6); moon.castShadow=true;
+moon.shadow.mapSize.set(IS_TOUCH?512:1024,IS_TOUCH?512:1024);
+moon.shadow.camera.far=40;
+moon.shadow.camera.left=-12; moon.shadow.camera.right=12;
+moon.shadow.camera.top=12; moon.shadow.camera.bottom=-12;
+scene.add(moon);
+
+const hallLight = new THREE.PointLight(0xd6e4ff, 0, 16, 2);
+hallLight.position.set(0,2.55,-8); hallLight.castShadow=!IS_TOUCH;
+hallLight.shadow.mapSize.set(512,512); scene.add(hallLight);
+const hallGlow = new THREE.PointLight(0x6d84b8, 2.2, 12, 2);
+hallGlow.position.set(0,2.4,-14); scene.add(hallGlow);
+const tvLight = new THREE.PointLight(0x9fdcff, 0, 10, 2);
+tvLight.position.set(4.2,1.3,1.6); scene.add(tvLight);
+
+const flashlight = new THREE.SpotLight(0xfff4dc, 0, 26, Math.PI/6.6, 0.42, 1.0);
+flashlight.castShadow = !IS_TOUCH;
+flashlight.shadow.mapSize.set(512,512);
+flashlight.position.set(0.22,-0.12,0);
+flashlight.target.position.set(0,0,-1);
+camera.add(flashlight, flashlight.target);
+scene.add(camera);
+
+/* =========================================================
+   4. MATERIALS + HELPERS
+========================================================= */
+const std = o => new THREE.MeshStandardMaterial(o);
+const M = {
+  floor : std({map:texFloor, roughness:.72, metalness:.02}),
+  wall  : std({map:texWall,  roughness:.92}),
+  hall  : std({map:texHall,  roughness:.95}),
+  ceil  : std({color:0x3d3d46, roughness:.95}),
+  wood  : std({map:texWood,  roughness:.65}),
+  fridge: std({map:texEnamel, color:0xe8e4d6, roughness:.32, metalness:.28}),
+  metal : std({color:0xb9bcc2, roughness:.28, metalness:.85}),
+  dark  : std({color:0x272730, roughness:.7}),
+  door  : std({map:texWood, color:0xc79a6d, roughness:.6}),
+  paper : std({map:texNote, roughness:.95}),
+  glass : std({color:0x4a6a8c, roughness:.08, metalness:.2, transparent:true, opacity:.28}),
+  cloth : std({color:0x5c6478, roughness:1, side:THREE.DoubleSide}),
+  screen: new THREE.MeshStandardMaterial({map:texTV, emissiveMap:texTV,
+            emissive:0xffffff, emissiveIntensity:0, roughness:.4, color:0x101418}),
+  skin  : std({color:0xb9ae9c, roughness:.85}),
+  suit  : std({color:0x22212a, roughness:.9})
+};
+function box(w,h,d,m,x,y,z,ry=0,shadow=true){
+  const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d), m);
+  o.position.set(x,y,z); o.rotation.y=ry;
+  o.castShadow=shadow; o.receiveShadow=true;
+  scene.add(o); return o;
+}
+
+/* =========================================================
+   5. LEVEL GEOMETRY
+========================================================= */
+const ROOM={w:10,d:10,h:3};
+box(ROOM.w,0.2,ROOM.d,M.floor,0,-0.1,0,0,false);
+box(ROOM.w,0.2,ROOM.d,M.ceil ,0,ROOM.h,0,0,false);
+box(0.2,ROOM.h,ROOM.d,M.wall,-ROOM.w/2,ROOM.h/2,0);
+box(0.2,ROOM.h,ROOM.d,M.wall, ROOM.w/2,ROOM.h/2,0);
+box(3.4,ROOM.h,0.2,M.wall,-3.3,ROOM.h/2, ROOM.d/2);
+box(3.4,ROOM.h,0.2,M.wall, 3.3,ROOM.h/2, ROOM.d/2);
+box(3.2,0.9,0.2,M.wall,0,ROOM.h-0.45, ROOM.d/2);
+box(3.6,ROOM.h,0.2,M.wall,-3.2,ROOM.h/2,-ROOM.d/2);
+box(3.6,ROOM.h,0.2,M.wall, 3.2,ROOM.h/2,-ROOM.d/2);
+box(2.8,0.7,0.2,M.wall,0,ROOM.h-0.35,-ROOM.d/2);
+box(ROOM.w,0.16,0.06,M.wood,0,0.08,-ROOM.d/2+0.13,0,false);
+box(0.06,0.16,ROOM.d,M.wood,-ROOM.w/2+0.13,0.08,0,0,false);
+
+/* window + swaying curtain */
+box(0.06,1.4,2.3,M.glass,ROOM.w/2-0.12,1.75,-2.0,0,false);
+box(0.1,1.6,0.12,M.wood,ROOM.w/2-0.16,1.75,-0.85,0,false);
+box(0.1,1.6,0.12,M.wood,ROOM.w/2-0.16,1.75,-3.15,0,false);
+const curtain = new THREE.Mesh(new THREE.PlaneGeometry(2.4,1.7,14,8), M.cloth);
+curtain.rotation.y = -Math.PI/2;
+curtain.position.set(ROOM.w/2-0.28,1.75,-2.0);
+curtain.receiveShadow=true; scene.add(curtain);
+const curtainBase = Float32Array.from(curtain.geometry.attributes.position.array);
+
+/* hallway */
+box(2.8,0.2,14,M.hall,0,-0.1,-12,0,false);
+box(2.8,0.2,14,M.ceil,0,ROOM.h,-12,0,false);
+box(0.2,ROOM.h,14,M.hall,-1.4,ROOM.h/2,-12);
+box(0.2,ROOM.h,14,M.hall, 1.4,ROOM.h/2,-12);
+box(2.8,ROOM.h,0.2,M.hall,0,ROOM.h/2,-19);
+for(let z=-7; z>-18; z-=3.5) box(0.9,1.3,0.05,M.paper,-1.32,1.7,z,Math.PI/2,false);
+
+/* furniture */
+box(3.0,0.9,0.85,M.wood,-3.2,0.45,3.35);
+box(3.05,0.06,0.9,M.metal,-3.2,0.92,3.35);
+box(1.7,0.08,1.1,M.wood, 3.0,0.75,-1.0);
+for(const c of [[2.3,-1.6],[3.7,-1.6],[2.3,-0.4],[3.7,-0.4]]) box(0.1,0.75,0.1,M.wood,c[0],0.37,c[1]);
+box(0.45,0.5,0.5,M.metal,-4.3,1.2,3.35);
+box(0.42,0.95,0.42,M.dark, 2.2,0.47,2.7);
+box(1.3,0.62,0.45,M.wood, 4.35,0.31,1.9);
+
+/* =========================================================
+   6. INTERACTIVE PROPS (with animated pivots)
+========================================================= */
+const interactables=[];
+const tag=(m,action,label)=>{ m.userData.action=action; m.userData.label=label;
+  interactables.push(m); return m; };
+const mesh=(g,m,x,y,z)=>{ const o=new THREE.Mesh(g,m); o.position.set(x,y,z);
+  o.castShadow=true; o.receiveShadow=true; return o; };
+const B=(w,h,d)=>new THREE.BoxGeometry(w,h,d);
+
+/* ---- FRIDGE, door on a hinge pivot ---- */
+const fridge=new THREE.Group(); fridge.position.set(-4.15,0,-3.6); fridge.rotation.y=Math.PI*0.06;
+fridge.add(mesh(B(1.15,2.05,0.92),M.fridge,0,1.02,0));
+const fridgeHinge=new THREE.Group(); fridgeHinge.position.set(-0.57,0,0.46); fridge.add(fridgeHinge);
+const fDoor=mesh(B(1.14,1.32,0.07),M.fridge,0.57,0.7,0.02); fridgeHinge.add(fDoor);
+fridgeHinge.add(mesh(B(0.07,1.0,0.07),M.metal,1.02,0.74,0.08));
+const frzHinge=new THREE.Group(); frzHinge.position.set(-0.57,0,0.46); fridge.add(frzHinge);
+frzHinge.add(mesh(B(1.14,0.6,0.07),M.fridge,0.57,1.7,0.02));
+frzHinge.add(mesh(B(0.07,0.42,0.07),M.metal,1.02,1.68,0.08));
+const fNote=mesh(B(0.44,0.56,0.015),M.paper,-0.16,1.02,0.06); fNote.rotation.z=0.05;
+fridgeHinge.add(fNote);
+const magnet=mesh(new THREE.CylinderGeometry(0.05,0.05,0.02,10),std({color:0xc23b22,roughness:.5}),-0.16,1.30,0.07);
+magnet.rotation.x=Math.PI/2; fridgeHinge.add(magnet);
+/* fridge interior glow when open */
+const fridgeInner=new THREE.PointLight(0xdfeaff,0,2.6,2); fridgeInner.position.set(0,1.1,0.2);
+fridge.add(fridgeInner);
+scene.add(fridge);
+fridge.traverse(o=>{ if(o.isMesh) tag(o,'rules','Press [E] to Read Rules'); });
+
+/* ---- FRONT DOOR, hinged + knock shake ---- */
+const doorPivot=new THREE.Group(); doorPivot.position.set(-1.3,0,ROOM.d/2-0.06); scene.add(doorPivot);
+const frontDoor=mesh(B(2.6,2.25,0.12),M.door,1.3,1.12,0); doorPivot.add(frontDoor);
+doorPivot.add(mesh(new THREE.SphereGeometry(0.07,12,10),M.metal,2.35,1.15,-0.12));
+tag(frontDoor,'door','Press [E] to Open the Front Door');
+
+/* ---- HALLWAY LIGHT SWITCH (toggle animates) ---- */
+const switchPlate=box(0.24,0.34,0.05,std({color:0xece6d2,roughness:.7}),-1.95,1.42,-ROOM.d/2+0.14,0,false);
+const switchNub=box(0.09,0.14,0.06,M.dark,-1.95,1.46,-ROOM.d/2+0.19,0,false);
+tag(switchPlate,'switch','Press [E] to Flip the Hallway Light');
+tag(switchNub,'switch','Press [E] to Flip the Hallway Light');
+
+/* ---- CUPBOARD: built from panels so the inside is a real space ---- */
+const closet=new THREE.Group(); closet.position.set(4.05,0,-4.0); closet.rotation.y=-Math.PI*0.1;
+closet.add(mesh(B(1.7,2.35,0.06),M.wood,0,1.17,-0.47));   // back
+closet.add(mesh(B(0.06,2.35,0.95),M.wood,-0.85,1.17,0));   // left side
+closet.add(mesh(B(0.06,2.35,0.95),M.wood, 0.85,1.17,0));   // right side
+closet.add(mesh(B(1.7,0.06,0.95),M.wood,0,2.34,0));        // top
+closet.add(mesh(B(1.7,0.06,0.95),M.wood,0,0.03,0));        // base
+closet.add(mesh(B(1.6,0.05,0.85),M.wood,0,1.75,0));        // inner shelf
+const clHingeL=new THREE.Group(); clHingeL.position.set(-0.82,0,0.47); closet.add(clHingeL);
+clHingeL.add(mesh(B(0.8,2.12,0.06),M.door,0.4,1.12,0));
+const clHingeR=new THREE.Group(); clHingeR.position.set( 0.82,0,0.47); closet.add(clHingeR);
+clHingeR.add(mesh(B(0.8,2.12,0.06),M.door,-0.4,1.12,0));
+scene.add(closet);
+closet.traverse(o=>{ if(o.isMesh) tag(o,'closet','Press [E] to Hide in the Cupboard'); });
+
+/* ---- TV ---- */
+const tvBody=box(1.2,0.85,0.55,M.dark,4.35,1.0,1.9);
+const tvScreen=box(1.0,0.65,0.03,M.screen,4.35,1.05,1.62);
+tag(tvBody,'tv','Press [E] to Turn the TV On');
+tag(tvScreen,'tv','Press [E] to Turn the TV On');
+
+/* ---- PHONE (receiver rattles when ringing) ---- */
+const phone=new THREE.Group(); phone.position.set(-2.3,0.95,3.35); scene.add(phone);
+phone.add(mesh(B(0.3,0.1,0.36),M.dark,0,0,0));
+const receiver=mesh(B(0.28,0.09,0.1),std({color:0x15151a,roughness:.6}),0,0.09,0);
+phone.add(receiver);
+phone.traverse(o=>{ if(o.isMesh) tag(o,'phone','Press [E] to Check the Phone'); });
+
+/* ---- WALL NOTE ---- */
+const wallNote=box(0.02,0.52,0.4,M.paper,-ROOM.w/2+0.13,1.72,-1.0,0,false);
+tag(wallNote,"letter","Press [E] to Read Grandma's Note");
+
+/* ---- COUCH (sit, eat, sleep) ---- */
+const couch=new THREE.Group(); couch.position.set(2.6,0,3.2); couch.rotation.y=-Math.PI*0.08;
+const couchMat=std({color:0x4a4438,roughness:.95});
+couch.add(mesh(B(2.3,0.42,0.95),couchMat,0,0.3,0));
+couch.add(mesh(B(2.3,0.75,0.22),couchMat,0,0.72,-0.38));
+couch.add(mesh(B(0.22,0.62,0.95),couchMat,-1.05,0.6,0));
+couch.add(mesh(B(0.22,0.62,0.95),couchMat, 1.05,0.6,0));
+const cushionL=mesh(B(1.0,0.16,0.85),std({color:0x565040,roughness:1}),-0.55,0.58,0.02);
+const cushionR=mesh(B(1.0,0.16,0.85),std({color:0x565040,roughness:1}), 0.55,0.58,0.02);
+couch.add(cushionL,cushionR);
+scene.add(couch);
+couch.traverse(o=>{ if(o.isMesh) tag(o,'couch','Press [E] to Sit Down'); });
+
+/* ---- FOOD BOX: appears on the floor after the delivery knock ---- */
+const foodBox=new THREE.Group(); foodBox.position.set(0.6,0,3.55);
+const pizzaTex=canvasTex(128,128,(c,w,h)=>{
+  c.fillStyle='#c9a86e'; c.fillRect(0,0,w,h);
+  c.fillStyle='#8d2f22'; c.beginPath(); c.arc(w/2,h/2,34,0,7); c.fill();
+  c.fillStyle='#3a3a44'; c.font='bold 15px monospace';
+  c.fillText('LATE NITE',16,26); c.fillText('PIZZA CO.',20,110);
+  noiseOverlay(c,w,h,.18,2);
+});
+foodBox.add(mesh(B(0.62,0.09,0.62),std({map:pizzaTex,roughness:.9}),0,0.06,0));
+foodBox.add(mesh(B(0.3,0.14,0.22),std({color:0xb9432f,roughness:.7}),0.42,0.08,0.1));
+foodBox.visible=false; scene.add(foodBox);
+foodBox.traverse(o=>{ if(o.isMesh) tag(o,'food','Press [E] to Pick Up the Food'); });
+
+/* ---- HALLWAY DOORS: all locked ---- */
+const hallDoors=[];
+[[-1.3,-6.5,1],[1.3,-9.5,-1],[-1.3,-13.0,1],[1.3,-16.0,-1]].forEach(d=>{
+  const g=new THREE.Group(); g.position.set(d[0],0,d[1]); g.rotation.y=d[2]*Math.PI/2;
+  const leaf=mesh(B(1.15,2.15,0.09),M.door,0,1.08,0); g.add(leaf);
+  g.add(mesh(new THREE.SphereGeometry(0.06,10,8),M.metal,0.44,1.1,0.09));
+  scene.add(g);
+  tag(leaf,'halldoor','Press [E] to Open the Door');
+  hallDoors.push({group:g, baseX:d[0], shake:0});
+});
+
+/* =========================================================
+   7. THE ENTITY  -  rigged limbs + walk cycle animation
+========================================================= */
+const entity=new THREE.Group();
+const torso=mesh(B(0.6,1.05,0.34),M.suit,0,0,0); torso.position.y=1.12; entity.add(torso);
+const neck=mesh(B(0.14,0.16,0.14),M.skin,0,1.72,0); entity.add(neck);
+const head=mesh(B(0.36,0.4,0.34),M.skin,0,1.98,0); entity.add(head);
+head.add(mesh(B(0.07,0.03,0.02),std({color:0x0a0a0c}),-0.09,0.04,0.17));
+head.add(mesh(B(0.07,0.03,0.02),std({color:0x0a0a0c}), 0.09,0.04,0.17));
+const armL=new THREE.Group(); armL.position.set(-0.38,1.6,0); entity.add(armL);
+armL.add(mesh(B(0.15,0.92,0.15),M.suit,0,-0.46,0));
+const armR=new THREE.Group(); armR.position.set( 0.38,1.6,0); entity.add(armR);
+armR.add(mesh(B(0.15,0.92,0.15),M.suit,0,-0.46,0));
+const legL=new THREE.Group(); legL.position.set(-0.15,0.62,0); entity.add(legL);
+legL.add(mesh(B(0.18,1.0,0.18),M.suit,0,-0.5,0));
+const legR=new THREE.Group(); legR.position.set( 0.15,0.62,0); entity.add(legR);
+legR.add(mesh(B(0.18,1.0,0.18),M.suit,0,-0.5,0));
+entity.position.set(0,0,-13); entity.visible=false; scene.add(entity);
+const entityEyes=new THREE.PointLight(0xff6a4a,0,3.5,2);
+entityEyes.position.set(0,1.98,0.2); entity.add(entityEyes);
+
+function animateEntity(t, walking){
+  const s = walking ? Math.sin(t*4.4) : Math.sin(t*1.1)*0.15;
+  legL.rotation.x =  s*0.7;
+  legR.rotation.x = -s*0.7;
+  armL.rotation.x = -s*0.5;
+  armR.rotation.x =  s*0.5;
+  torso.rotation.z = Math.sin(t*2.2)*0.03;
+  head.rotation.z  = Math.sin(t*0.7)*0.12;
+  head.position.y  = 1.98 + Math.abs(Math.sin(t*4.4))*0.02;
+}
+
+/* =========================================================
+   8. PROCEDURAL AUDIO (WebAudio, no asset files)
+========================================================= */
+const A = { ctx:null, on:true, master:null, droneGain:null, humGain:null,
+            windGain:null, heartGain:null, noiseBuf:null, started:false };
+function makeNoiseBuffer(ctx){
+  const len=ctx.sampleRate*3, buf=ctx.createBuffer(1,len,ctx.sampleRate), d=buf.getChannelData(0);
+  let last=0;
+  for(let i=0;i<len;i++){ const w=Math.random()*2-1; last=(last+0.02*w)/1.02; d[i]=last*3.2; }
+  return buf;
+}
+function audioInit(){
+  if(A.started) return;
+  const Ctx=window.AudioContext||window.webkitAudioContext;
+  if(!Ctx) return;
+  A.ctx=new Ctx(); A.started=true;
+  A.noiseBuf=makeNoiseBuffer(A.ctx);
+
+  A.master=A.ctx.createGain(); A.master.gain.value=A.on?0.9:0; A.master.connect(A.ctx.destination);
+
+  /* low room drone: detuned saws through a lowpass */
+  A.droneGain=A.ctx.createGain(); A.droneGain.gain.value=0.12;
+  const lp=A.ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=220; lp.Q.value=3;
+  A.droneGain.connect(lp); lp.connect(A.master);
+  [55,55.6,82.5].forEach((f,i)=>{
+    const o=A.ctx.createOscillator(); o.type=i===2?'triangle':'sawtooth'; o.frequency.value=f;
+    const g=A.ctx.createGain(); g.gain.value=i===2?0.25:0.5;
+    o.connect(g); g.connect(A.droneGain); o.start();
+  });
+  /* fridge hum */
+  A.humGain=A.ctx.createGain(); A.humGain.gain.value=0.05; A.humGain.connect(A.master);
+  [60,120,180].forEach((f,i)=>{
+    const o=A.ctx.createOscillator(); o.type='sine'; o.frequency.value=f;
+    const g=A.ctx.createGain(); g.gain.value=0.6/(i+1);
+    o.connect(g); g.connect(A.humGain); o.start();
+  });
+  /* wind through the window */
+  const wind=A.ctx.createBufferSource(); wind.buffer=A.noiseBuf; wind.loop=true;
+  const wf=A.ctx.createBiquadFilter(); wf.type='bandpass'; wf.frequency.value=420; wf.Q.value=0.7;
+  A.windGain=A.ctx.createGain(); A.windGain.gain.value=0.06;
+  wind.connect(wf); wf.connect(A.windGain); A.windGain.connect(A.master); wind.start();
+  const lfo=A.ctx.createOscillator(); lfo.frequency.value=0.07;
+  const lg=A.ctx.createGain(); lg.gain.value=0.04;
+  lfo.connect(lg); lg.connect(A.windGain.gain); lfo.start();
+
+  A.heartGain=A.ctx.createGain(); A.heartGain.gain.value=0; A.heartGain.connect(A.master);
+  $('audioHint').textContent='ambient sound: on';
+}
+function sfxTone(freq,dur,type='sine',vol=0.25,glide){
+  if(!A.ctx||!A.on) return;
+  const o=A.ctx.createOscillator(), g=A.ctx.createGain();
+  o.type=type; o.frequency.value=freq;
+  if(glide) o.frequency.exponentialRampToValueAtTime(glide,A.ctx.currentTime+dur);
+  g.gain.value=0.0001; g.gain.linearRampToValueAtTime(vol,A.ctx.currentTime+0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001,A.ctx.currentTime+dur);
+  o.connect(g); g.connect(A.master); o.start(); o.stop(A.ctx.currentTime+dur+0.05);
+}
+function sfxNoise(dur,freq,vol=0.5,type='bandpass'){
+  if(!A.ctx||!A.on) return;
+  const s=A.ctx.createBufferSource(); s.buffer=A.noiseBuf;
+  const f=A.ctx.createBiquadFilter(); f.type=type; f.frequency.value=freq; f.Q.value=1.2;
+  const g=A.ctx.createGain(); g.gain.value=vol;
+  g.gain.exponentialRampToValueAtTime(0.0001,A.ctx.currentTime+dur);
+  s.connect(f); f.connect(g); g.connect(A.master); s.start(); s.stop(A.ctx.currentTime+dur+0.05);
+}
+const SFX={
+  click:()=>sfxTone(880,0.05,'square',0.08),
+  flip:()=>{ sfxTone(1400,0.04,'square',0.12); sfxNoise(0.06,2600,0.25,'highpass'); },
+  knock:()=>{ for(let i=0;i<3;i++) setTimeout(()=>sfxNoise(0.22,180,0.85,'lowpass'),i*520); },
+  ring:()=>{ for(let i=0;i<8;i++) setTimeout(()=>{ sfxTone(1050,0.35,'sine',0.16);
+              sfxTone(1290,0.35,'sine',0.14); },i*900); },
+  whisper:()=>sfxNoise(1.6,900,0.32,'bandpass'),
+  doorOpen:()=>sfxNoise(0.7,300,0.4,'lowpass'),
+  creak:()=>sfxTone(320,0.9,'sawtooth',0.05,120),
+  hit:()=>{ sfxNoise(0.5,120,0.9,'lowpass'); sfxTone(70,0.8,'sine',0.4,40); },
+  win:()=>{ [392,523,659].forEach((f,i)=>setTimeout(()=>sfxTone(f,0.7,'triangle',0.18),i*220)); }
+};
+function setSound(on){
+  A.on=on; $('soundState').textContent=on?'ON':'OFF';
+  if(A.master) A.master.gain.value=on?0.9:0;
+}
+
+/* =========================================================
+   9. GAME STATE + MAIN MENU
+========================================================= */
+const S={ mode:'menu', overlay:null, flashOn:false, battery:100, nerve:100, minutes:0,
+  hallLightOn:false, tvOn:false, hiding:false, fridgeOpen:false, fridgeHourUsed:-1,
+  readRules:false, calling:false, knocking:false, nextEvent:16, knockShake:0,
+  /* ---- scripted night ---- */
+  stage:'intro',      // intro > delivery > pickup > couch > eating > sleep > night > dawn > credits
+  carrying:false, sitting:false, eatT:0, sleepT:0,
+  round:0, ROUNDS:5, roundWait:8, hideWindow:0, hiddenFor:0, safe:false };
+const MIN_PER_SEC=3;
+
+function say(t,ms=3400){ $('subs').textContent=t; $('subs').style.opacity=1;
+  clearTimeout(say._t); say._t=setTimeout(()=>$('subs').style.opacity=0,ms); }
+function objective(t){ $('objText').textContent=t; }
+function vFlash(){ $('vflash').style.opacity=.8; setTimeout(()=>$('vflash').style.opacity=0,120); }
+
+const controls=new PointerLockControls(camera,renderer.domElement);
+camera.rotation.order='YXZ';
+
+/* on phones there is no pointer lock: we enter play mode directly */
+function enterPlay(){
+  if(IS_TOUCH){
+    S.mode='play'; document.body.classList.add('playing'); $('menu').style.display='none';
+  } else controls.lock();
+}
+function backToMenu(){
+  if(S.mode==='dead'||S.mode==='won') return;
+  S.mode='menu'; document.body.classList.remove('playing'); $('menu').style.display='flex';
+  if(!IS_TOUCH) controls.unlock();
+}
+controls.addEventListener('lock',()=>{ S.mode='play'; document.body.classList.add('playing');
+  $('menu').style.display='none'; });
+controls.addEventListener('unlock',()=>{
+  if(S.mode==='dead'||S.mode==='won') return;
+  if(S.overlay) return;
+  backToMenu();
+});
+
+/* ---------- touch controls: stick, drag-look, buttons ---------- */
+const TOUCH={ mx:0, my:0, run:false, lookId:null, stickId:null, lastX:0, lastY:0 };
+function bindTouch(){
+  const stick=$('stick'), nub=$('nub'), look=$('look');
+  const rectOf=el=>el.getBoundingClientRect();
+  stick.addEventListener('pointerdown',e=>{ TOUCH.stickId=e.pointerId; stick.setPointerCapture(e.pointerId); moveStick(e); });
+  stick.addEventListener('pointermove',e=>{ if(e.pointerId===TOUCH.stickId) moveStick(e); });
+  const endStick=e=>{ if(e.pointerId===TOUCH.stickId){ TOUCH.stickId=null; TOUCH.mx=TOUCH.my=0;
+    nub.style.left='50%'; nub.style.top='50%'; } };
+  stick.addEventListener('pointerup',endStick);
+  stick.addEventListener('pointercancel',endStick);
+  function moveStick(e){
+    const r=rectOf(stick), cx=r.left+r.width/2, cy=r.top+r.height/2, max=r.width/2;
+    let dx=(e.clientX-cx)/max, dy=(e.clientY-cy)/max;
+    const len=Math.hypot(dx,dy); if(len>1){ dx/=len; dy/=len; }
+    TOUCH.mx=dx; TOUCH.my=dy;
+    nub.style.left=(50+dx*32)+'%'; nub.style.top=(50+dy*32)+'%';
+  }
+  look.addEventListener('pointerdown',e=>{ TOUCH.lookId=e.pointerId;
+    TOUCH.lastX=e.clientX; TOUCH.lastY=e.clientY; look.setPointerCapture(e.pointerId); });
+  look.addEventListener('pointermove',e=>{
+    if(e.pointerId!==TOUCH.lookId) return;
+    const dx=e.clientX-TOUCH.lastX, dy=e.clientY-TOUCH.lastY;
+    TOUCH.lastX=e.clientX; TOUCH.lastY=e.clientY;
+    turnCamera(dx*0.0045, dy*0.0045);
+  });
+  const endLook=e=>{ if(e.pointerId===TOUCH.lookId) TOUCH.lookId=null; };
+  look.addEventListener('pointerup',endLook);
+  look.addEventListener('pointercancel',endLook);
+
+  const press=(id,fn)=>{ const el=$(id);
+    el.addEventListener('pointerdown',ev=>{ ev.preventDefault(); ev.stopPropagation(); fn(true); });
+    el.addEventListener('pointerup',ev=>{ ev.preventDefault(); fn(false); });
+    el.addEventListener('contextmenu',ev=>ev.preventDefault());
+  };
+  press('bUse',   d=>{ if(d && !S.overlay) interact(); });
+  press('bLight', d=>{ if(d && !S.overlay) toggleFlashlight(); });
+  press('bRun',   d=>{ TOUCH.run=d; });
+  press('bPause', d=>{ if(d) backToMenu(); });
+}
+function turnCamera(dx,dy){
+  camera.rotation.y -= dx;
+  camera.rotation.x = THREE.MathUtils.clamp(camera.rotation.x - dy, -Math.PI/2.2, Math.PI/2.2);
+  camera.rotation.z = 0;
+}
+if(IS_TOUCH) bindTouch();
+
+/* menu buttons */
+addEventListener('pointerdown',()=>audioInit(),{once:true});
+$('btnStart').onclick=()=>{ SFX.click(); audioInit(); startNight(); };
+$('btnStory').onclick=()=>{ SFX.click(); showPanel('pStory'); };
+$('btnRules').onclick=()=>{ SFX.click(); showPanel('pRules'); };
+$('btnHow').onclick  =()=>{ SFX.click(); showPanel('pHow'); };
+$('btnRetro').onclick=()=>{ SFX.click(); retro=!retro;
+  document.body.classList.toggle('retro',retro);
+  $('retroState').textContent=retro?'ON':'OFF'; resize(); };
+$('btnSound').onclick=()=>{ audioInit(); setSound(!A.on); SFX.click(); };
+document.querySelectorAll('[data-close]').forEach(el=>{
+  el.onclick=()=>{ SFX.click(); hidePanel(); };
+});
+function showPanel(id){ S.overlay=id; $(id).style.display='block'; $('prompt').style.display='none'; }
+function hidePanel(){
+  if(!S.overlay) return;
+  $(S.overlay).style.display='none'; S.overlay=null;
+  if(S.mode==='play'&&!IS_TOUCH) controls.lock();
+}
+function startNight(){
+  hidePanel(); enterPlay();
+  objective('Read the rules on the fridge');
+  say(IS_TOUCH?'Drag the right side to look, use the stick to walk.'
+             :'Mom locked the door at 11. Six hours to go.',4600);
+}
+
+/* =========================================================
+   10. INTERACTION (raycaster, 3 units)
+========================================================= */
+const ray=new THREE.Raycaster(); ray.far=3;
+const CENTER=new THREE.Vector2(0,0);
+let focus=null;
+function labelFor(o){
+  switch(o.userData.action){
+    case 'switch': return 'Press [E] to Turn the Hallway Light '+(S.hallLightOn?'Off':'On');
+    case 'tv':     return 'Press [E] to Turn the TV '+(S.tvOn?'Off':'On');
+    case 'closet': return S.hiding?'Press [E] to Come Out':'Press [E] to Hide in the Cupboard';
+    case 'phone':  return S.calling?'Press [E] to Answer the Phone':'Press [E] to Check the Phone';
+    case 'couch':  return S.carrying?'Press [E] to Sit Down and Eat':'Press [E] to Sit Down';
+    case 'door':   return S.stage==='dawn'?'Press [E] to Let Mom In':'Press [E] to Open the Front Door';
+    default:       return o.userData.label;
+  }
+}
+function updateFocus(){
+  if(S.mode!=='play'||S.overlay){ $('prompt').style.display='none'; focus=null; return; }
+  if(S.hiding){
+    focus=null;
+    $('prompt').textContent = IS_TOUCH?'Tap USE to Come Out':'Press [E] to Come Out';
+    $('prompt').style.display='block';
+    return;
+  }
+  if(S.sitting){ focus=null; $('prompt').style.display='none'; return; }
+  ray.setFromCamera(CENTER,camera);
+  const hit=ray.intersectObjects(interactables,false)[0];
+  focus=(hit&&hit.distance<=3)?hit.object:null;
+  if(focus){
+    let txt=labelFor(focus);
+    if(IS_TOUCH) txt=txt.replace('Press [E] to','Tap USE to');
+    $('prompt').textContent=txt; $('prompt').style.display='block';
+  }
+  else $('prompt').style.display='none';
+}
+function openRead(title,note,listHTML,foot){
+  $('rTitle').textContent=title; $('rNote').textContent=note;
+  $('rList').innerHTML=listHTML; $('rFoot').textContent=foot;
+  showPanel('pRead'); if(!IS_TOUCH) controls.unlock();
+}
+const RULES_LIST=$('pRules').querySelector('ol').innerHTML;
+
+function interact(){
+  if(S.sitting){ return; }
+  if(S.hiding){ leaveCloset(); return; }
+  if(!focus) return;
+  const hour=Math.floor(S.minutes/60);
+  switch(focus.userData.action){
+    case 'rules':
+      if(S.readRules && S.fridgeHourUsed===hour) nerveHit(28,'You opened the fridge twice in the same hour. Rule 4.');
+      S.fridgeHourUsed=hour; S.readRules=true; S.fridgeOpen=true;
+      SFX.doorOpen();
+      openRead('THE MIDNIGHT RULES',"taped to the fridge door \u2014 Grandma's handwriting",
+        RULES_LIST,"Leo \u2014 I love you. Just do the list. I'll be home before sunrise.");
+      setTimeout(()=>{ S.fridgeOpen=false; },5000);
+      if(S.stage==='intro') beginDelivery();
+      break;
+    case 'halldoor':
+      SFX.doorOpen(); shakeHallDoor(focus);
+      say('Locked. Every door in the hallway is locked from the other side.');
+      break;
+    case 'food':
+      S.carrying=true; foodBox.visible=false; S.stage='couch';
+      SFX.creak();
+      say('Why is the food on the floor? Nobody opened the door. Nobody could have.',5200);
+      objective('Sit on the couch and eat');
+      break;
+    case 'couch': sitDown(); break;
+    case 'letter':
+      SFX.creak();
+      openRead('NOTE ON THE WALL','ballpoint pen, shaky handwriting',
+        '<li>The hallway bulb is new. It turns itself on when it wants you to look.</li>'+
+        '<li>The cupboard latch works from the inside. Ada never used it.</li>'+
+        '<li>If it copies your voice, it has already been listening for weeks.</li>',
+        'Do the list, Leo. Every night. \u2014 Grandma');
+      break;
+    case 'switch':
+      S.hallLightOn=!S.hallLightOn; SFX.flip();
+      say(S.hallLightOn?'The hallway light hums on. Rule 1: do not look down the hallway.'
+                       :'The hallway goes dark again.');
+      break;
+    case 'tv':
+      S.tvOn=!S.tvOn; SFX.flip();
+      say(S.tvOn?'Static fills the room. The noise makes the flat feel occupied.':'You switch the TV off.');
+      break;
+    case 'closet': enterCloset(); break;
+    case 'phone':
+      if(S.calling){ S.calling=false;
+        nerveHit(16,'A voice almost exactly like Mom says: "Leo. Come open the door."'); SFX.whisper(); }
+      else say('No missed calls. The line clicks like someone is already on it.');
+      break;
+    case 'door':
+      if(S.stage==='dawn') momArrives();
+      else if(S.stage==='delivery'||S.stage==='pickup')
+        gameOver('You opened the front door to take the delivery. Rule 2. Ada made the same mistake.');
+      else gameOver('You opened the front door before 6:00 AM. Rule 2. Ada made the same mistake.');
+      break;
+  }
+}
+function shakeHallDoor(leaf){
+  const d=hallDoors.find(h=>h.group===leaf.parent);
+  if(d) d.shake=1;
+}
+
+/* =========================================================
+   11b. SCRIPTED NIGHT
+========================================================= */
+function beginDelivery(){
+  S.stage='delivery';
+  objective('Answer nothing. Just look.');
+  setTimeout(()=>{
+    S.knocking=true; S.knockShake=1; SFX.knock();
+    say('Three knocks at the front door.',3600);
+  },2600);
+  setTimeout(()=>{
+    say('Oh \u2014 I remember. I ordered food.',3600);
+  },7000);
+  setTimeout(()=>{
+    S.knocking=false; S.stage='pickup'; foodBox.visible=true;
+    SFX.creak(); say('The box is already inside. Sitting on the kitchen floor.',4600);
+    objective('Pick up the food');
+  },11000);
+}
+function sitDown(){
+  if(!S.carrying){ say('You should eat first. The box is on the floor.'); return; }
+  S.sitting=true; S.stage='eating'; S.eatT=0;
+  camera.position.set(2.6,1.28,3.05);
+  objective('Eat');
+  say('You sit down with the box on your knees and eat in the dark.',4200);
+  const lines=[
+    ['It is still warm. That is the part you do not like.',4000],
+    ['The hallway is quiet. Every door out there is locked anyway.',9000],
+    ['Your eyes are open. You are almost sure your eyes are open.',15000]
+  ];
+  lines.forEach(l=>setTimeout(()=>{ if(S.stage==='eating') say(l[0],4000); },l[1]));
+  setTimeout(()=>{ if(S.stage==='eating') fallAsleep(); },20000);
+}
+function fallAsleep(){
+  S.stage='sleep'; S.carrying=false;
+  $('fade').style.opacity=1;
+  say('');
+  setTimeout(()=>{
+    /* wake at 5:00 AM in the dark */
+    S.minutes=300; S.sitting=false;
+    S.battery=100; S.flashOn=false; $('fl').textContent='OFF';
+    camera.position.set(2.6,1.55,2.4);
+    powerCut();
+    S.stage='night'; S.round=0; S.roundWait=9; S.hideWindow=0; S.hiddenFor=0; S.safe=false;
+    $('fade').style.opacity=0;
+    objective('5:00 AM - use the flashlight. Hide on every knock.');
+    say('5:00 AM. The power is out and you did not turn anything off.',5200);
+    SFX.creak();
+  },3400);
+}
+function powerCut(){
+  S.hallLightOn=false; S.tvOn=false;
+  ambient.intensity=0.12; hemi.intensity=0.14;
+  bulb.intensity=0; counterLight.intensity=0; hallGlow.intensity=0.25;
+  moon.intensity=0.22; glassBulb.material.emissiveIntensity=0;
+  scene.fog.density=0.075;
+  M.screen.emissiveIntensity=0; tvLight.intensity=0;
+  if(A.humGain) A.humGain.gain.value=0;
+}
+function powerBack(){
+  ambient.intensity=0.85; hemi.intensity=0.8;
+  bulb.intensity=14; counterLight.intensity=6; hallGlow.intensity=2.2;
+  moon.intensity=1.1; glassBulb.material.emissiveIntensity=2.4;
+  scene.fog.density=0.03;
+}
+function momArrives(){
+  if(S.mode!=='play') return;
+  S.stage='credits'; S.mode='won';
+  S.hiding=false; document.body.classList.remove('hiding');
+  powerBack(); SFX.doorOpen(); SFX.win();
+  entity.visible=false; entityEyes.intensity=0;
+  document.body.classList.remove('playing');
+  $('prompt').style.display='none'; $('timer').style.display='none';
+  if(!IS_TOUCH) controls.unlock();
+  $('menu').style.display='none';
+  setTimeout(()=>{ $('credits').style.display='block'; },900);
+}
+
+/* one hide round: knock, 5 s to get in, 6 s to stay in */
+function updateScript(dt){
+  if(S.mode!=='play'||S.overlay) return;
+
+  if(S.stage==='night'){
+    if(S.hideWindow<=0 && !S.safe){
+      S.roundWait-=dt;
+      if(S.roundWait<=0){
+        S.round++;
+        S.hideWindow=6; S.hiddenFor=0;
+        SFX.knock(); SFX.whisper();
+        say('A knock from the hallway. Six seconds to get in the cupboard. ('+S.round+' of '+S.ROUNDS+')',4600);
+      }
+    } else if(S.hideWindow>0){
+      S.hideWindow-=dt;
+      $('timer').style.display='block';
+      $('timer').innerHTML=Math.ceil(Math.max(0,S.hideWindow))+'<small>GET IN THE CUPBOARD</small>';
+      if(S.hiding){ S.hideWindow=0; S.safe=true; S.hiddenFor=0; $('timer').style.display='none'; }
+      else if(S.hideWindow<=0){
+        gameOver('You were still standing in the open when it came in. Rule 3.');
+      }
+    } else if(S.safe){
+      if(!S.hiding){
+        gameOver('You came out too early. It was still in the room.');
+        return;
+      }
+      S.hiddenFor+=dt;
+      $('timer').style.display='block';
+      $('timer').innerHTML=Math.ceil(Math.max(0,6-S.hiddenFor))+'<small>STAY HIDDEN</small>';
+      if(S.hiddenFor>=6){
+        S.safe=false; S.hiddenFor=0; $('timer').style.display='none';
+        SFX.creak();
+        S.minutes=Math.min(354,300+S.round*11);
+        if(S.round>=S.ROUNDS){
+          S.stage='dawn'; S.minutes=360;
+          objective('6:00 AM - let Mom in');
+          say('Footsteps go away down the hall. Then a key. A real key.',5200);
+          setTimeout(()=>{ if(S.stage==='dawn'){ S.knockShake=1; SFX.knock();
+            say('Mom knocks. "Leo? It is six, baby. Open up."',6000); } },2600);
+        } else {
+          S.roundWait=7+Math.random()*5;
+          say('It leaves. Six seconds was enough. Come out.',3800);
+        }
+      }
+    }
+  }
+}
+
+/* ---- hiding: camera is placed INSIDE the cupboard using its own matrix,
+       the doors close behind you, and a dark interior overlay is shown ---- */
+const HIDE_IN  = new THREE.Vector3(0, 1.30, 0.02);   // local to the closet group
+const HIDE_OUT = new THREE.Vector3(0, 1.55, 1.25);
+function enterCloset(){
+  if(S.hiding) return;
+  const p=HIDE_IN.clone(); closet.localToWorld(p);
+  camera.position.copy(p);
+  S.hiding=true; document.body.classList.add('hiding');
+  $('state').textContent='hiding';
+  SFX.doorOpen();
+  say('You climb into the cupboard and pull the doors shut.');
+  if(S.calling){ S.calling=false; setTimeout(()=>say('The calling stops. Something walks past the doors.',4200),1600); }
+}
+function leaveCloset(){
+  if(!S.hiding) return;
+  const p=HIDE_OUT.clone(); closet.localToWorld(p);
+  p.y=1.55;
+  camera.position.copy(p);
+  S.hiding=false; document.body.classList.remove('hiding');
+  $('state').textContent='kitchen'; SFX.doorOpen();
+}
+
+/* =========================================================
+   11. KEYS
+========================================================= */
+const keys=Object.create(null);
+addEventListener('keydown',e=>{
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault();
+  keys[e.code]=true;
+  if(e.code==='KeyR'&&(S.mode==='dead'||S.mode==='won')){ location.reload(); return; }
+  if(S.mode==='dead'||S.mode==='won') return;
+  if(S.overlay&&(e.code==='KeyE'||e.code==='Escape')){ hidePanel(); return; }
+  if(S.mode!=='play') return;
+  if(e.code==='KeyF') toggleFlashlight();
+  if(e.code==='KeyE') interact();
+});
+addEventListener('keyup',e=>{ keys[e.code]=false; });
+function toggleFlashlight(){
+  if(S.battery<=0){ say('The batteries are dead.'); return; }
+  S.flashOn=!S.flashOn; $('fl').textContent=S.flashOn?'ON':'OFF'; SFX.flip();
+}
+/* =========================================================
+   12. MOVEMENT + CAMERA ANIMATION
+========================================================= */
+const WALK=2.7, RUN=4.4, RAD=0.36;
+const fwd=new THREE.Vector3(), rightV=new THREE.Vector3(), UP=new THREE.Vector3(0,1,0);
+let bob=0, breathe=0, swayX=0, swayY=0;
+
+function move(dt){
+  if(S.mode!=='play'||S.overlay||S.hiding||S.sitting){ return; }
+  let f=0,s=0;
+  if(keys['KeyW']||keys['ArrowUp'])    f+=1;
+  if(keys['KeyS']||keys['ArrowDown'])  f-=1;
+  if(keys['KeyD']||keys['ArrowRight']) s+=1;
+  if(keys['KeyA']||keys['ArrowLeft'])  s-=1;
+  if(IS_TOUCH){                                  // virtual stick
+    if(Math.abs(TOUCH.my)>0.12) f += -TOUCH.my;
+    if(Math.abs(TOUCH.mx)>0.12) s +=  TOUCH.mx;
+  }
+  const running=((keys['ShiftLeft']||keys['ShiftRight'])||TOUCH.run)&&(f||s);
+  const p=camera.position;
+  breathe+=dt;
+
+  if(f||s){
+    camera.getWorldDirection(fwd); fwd.y=0; fwd.normalize();
+    rightV.copy(fwd).cross(UP).normalize();
+    const spd=(running?RUN:WALK)*Math.min(1,Math.hypot(f,s));
+    const nx=p.x+(fwd.x*f+rightV.x*s)*spd*dt;
+    const nz=p.z+(fwd.z*f+rightV.z*s)*spd*dt;
+
+    /* two zones: the kitchen box and the hallway corridor.
+       The north wall can only be crossed through the doorway gap (|x| < 1.4). */
+    const HALL_HALF = 1.4, HALL_END = -18.6, THRESH = -ROOM.d/2;
+    const inHallNow = p.z < THRESH;
+    if(inHallNow){
+      /* inside the corridor: narrow walls, free to walk back into the kitchen */
+      p.x = THREE.MathUtils.clamp(nx, -HALL_HALF+RAD, HALL_HALF-RAD);
+      p.z = THREE.MathUtils.clamp(nz, HALL_END+RAD, ROOM.d/2-RAD);
+    } else {
+      /* inside the kitchen: passing the doorway is allowed when lined up with it */
+      const throughDoor = Math.abs(nx) < HALL_HALF-RAD;
+      p.x = THREE.MathUtils.clamp(nx, -ROOM.w/2+RAD, ROOM.w/2-RAD);
+      p.z = THREE.MathUtils.clamp(nz, throughDoor ? HALL_END+RAD : THRESH+RAD, ROOM.d/2-RAD);
+    }
+
+    const prevStep=Math.floor(bob/Math.PI);
+    bob+=dt*(running?13:9);
+    if(Math.floor(bob/Math.PI)!==prevStep) sfxNoise(0.09,900,0.1,'bandpass');   // one tap per step
+  }
+  $('state').textContent = p.z<-ROOM.d/2 ? 'hallway' : 'kitchen';
+  p.y = 1.55 + Math.sin(bob)*0.035 + Math.sin(breathe*1.7)*0.012 + S.knockShake*Math.random()*0.02;
+}
+
+/* flashlight sways behind the look direction (inertia) */
+function animateFlashlight(dt){
+  const targetX = (keys['KeyA']?0.05:0)+(keys['KeyD']?-0.05:0);
+  swayX += ((Math.sin(bob*0.5)*0.03+targetX)-swayX)*dt*4;
+  swayY += ((Math.sin(bob)*0.02)-swayY)*dt*4;
+  flashlight.target.position.set(swayX,swayY-0.02,-1);
+  flashlight.intensity = S.flashOn ? (S.battery<20 ? 45+Math.random()*35 : 90) : 0;
+}
+
+/* =========================================================
+   13. NERVE / ENDINGS
+========================================================= */
+function nerveHit(a,msg){ S.nerve=Math.max(0,S.nerve-a); if(msg) say(msg,4600);
+  vFlash(); SFX.hit(); if(S.nerve<=0) gameOver('Your nerve broke. It heard you panicking.'); }
+function gameOver(why){
+  if(S.mode==='dead'||S.mode==='won') return;
+  S.mode='dead';
+  S.hiding=false; S.sitting=false;
+  document.body.classList.remove('hiding');
+  entity.visible=true; entityEyes.intensity=6;
+  entity.position.set(camera.position.x,0,camera.position.z-1.5);
+  entity.lookAt(camera.position.x,1.4,camera.position.z);
+  vFlash(); SFX.hit(); SFX.whisper();
+  $('vblood').style.opacity=1;
+  $('overWhy').textContent=why;
+  $('over').style.display='flex';
+  $('prompt').style.display='none';
+  $('timer').style.display='none';
+  $('fade').style.opacity=0;
+  document.body.classList.remove('playing');
+  if(!IS_TOUCH) controls.unlock();
+  $('menu').style.display='none';
+}
+function winGame(){
+  if(S.mode==='dead'||S.mode==='won') return;
+  S.mode='won'; SFX.win();
+  S.hiding=false; document.body.classList.remove('hiding');
+  ambient.intensity=1.5; hemi.intensity=1.2; scene.fog.density=0.018;
+  scene.background.setHex(0x8fa8d8);
+  $('win').style.display='flex'; $('prompt').style.display='none';
+  document.body.classList.remove('playing');
+  if(!IS_TOUCH) controls.unlock();
+  $('menu').style.display='none';
+}
+
+/* =========================================================
+   14. NIGHT EVENTS
+========================================================= */
+function spawnEvent(){
+  const r=Math.random();
+  if(r<0.3){ S.calling=true; SFX.ring();
+    say('The phone rings. Nobody has this number but Mom.',4800);
+    setTimeout(()=>{ if(S.calling){ S.calling=false; say('The ringing stops by itself.'); } },12000);
+  } else if(r<0.58){ S.knocking=true; S.knockShake=1; SFX.knock();
+    say('Three slow knocks. "Leo? It is Mom. Let me in, sweetheart."',5400);
+    setTimeout(()=>{ S.knocking=false; },14000);
+  } else if(r<0.8){ S.calling=true; SFX.whisper();
+    say('Your own name, from the kitchen, in your own voice. HIDE.',5200);
+    setTimeout(()=>{ if(S.calling&&!S.hiding&&S.mode==='play')
+      gameOver('You did not hide when it called your name. Rule 3.'); S.calling=false; },9000);
+  } else { S.hallLightOn=true; SFX.flip();
+    say('The hallway light turns itself on. Do not look.',4800); }
+  S.nextEvent=18+Math.random()*16;
+}
+
+/* =========================================================
+   15. METERS + ENTITY BEHAVIOUR
+========================================================= */
+const lookDir=new THREE.Vector3();
+function updateMeters(dt){
+  if(S.mode!=='play'||S.overlay) return;
+  S.minutes=Math.min(360,S.minutes+dt*MIN_PER_SEC);
+  const h=Math.floor(S.minutes/60), m=Math.floor(S.minutes%60);
+  $('clock').textContent=((h%12===0)?12:h%12)+':'+String(m).padStart(2,'0')+' AM';
+  if(S.minutes>=360){ $('clock').textContent='6:00 AM'; }
+  if(S.flashOn){
+    S.battery=Math.max(0,S.battery-dt*(S.stage==='night'?1.05:2.0));
+    if(S.battery<=0){ S.flashOn=false; $('fl').textContent='DEAD'; say('The flashlight dies.'); }
+  }
+  $('batBar').firstElementChild.style.width=S.battery+'%';
+  $('sanBar').firstElementChild.style.width=S.nerve+'%';
+  if(S.mode==='play') $('vblood').style.opacity=String(Math.max(0,(45-S.nerve)/45*0.8));
+  if(A.heartGain) A.heartGain.gain.value=0;
+  if(S.nerve<50 && A.ctx && Math.random()<dt*(2.4-S.nerve/50)) sfxTone(58,0.24,'sine',0.22);
+}
+function updateEntity(dt,t){
+  /* scripted night: it walks in from the hallway on every knock */
+  if(S.stage==='night'&&(S.hideWindow>0||S.safe)){
+    entity.visible=!S.hiding;
+    entityEyes.intensity=entity.visible?2.4:0;
+    const target = S.safe ? 1.5 : -2.0;
+    entity.position.z += (target-entity.position.z)*dt*0.9;
+    entity.position.x += ((S.safe?3.2:0)-entity.position.x)*dt*0.9;
+    entity.lookAt(camera.position.x,1.9,camera.position.z);
+    animateEntity(t,true);
+    return;
+  }
+  if(S.stage==='night'||S.stage==='dawn'||S.stage==='credits'){
+    entity.visible=false; entityEyes.intensity=0;
+    entity.position.set(0,0,-13);
+    return;
+  }
+  entity.visible = S.hallLightOn && !S.hiding && S.mode==='play';
+  entityEyes.intensity = entity.visible?1.4+Math.sin(t*3)*0.6:0;
+  if(S.mode!=='play') return;
+  let walking=false;
+  if(entity.visible){
+    entity.lookAt(camera.position.x,1.9,camera.position.z);
+    camera.getWorldDirection(lookDir);
+    const staring = lookDir.z<-0.55 && camera.position.z<2.0;
+    if(staring){
+      walking=true;
+      entity.position.z += dt*1.35;                 // it closes in
+      S.nerve=Math.max(0,S.nerve-dt*15);
+      if(Math.random()<dt*1.5) SFX.whisper();
+      if(S.nerve<=0||entity.position.z>-6.0)
+        gameOver('You looked. It learned that you can see it. Rules 1 and 5.');
+    } else {
+      entity.position.z = Math.max(-13, entity.position.z - dt*0.6);
+      S.nerve=Math.min(100,S.nerve+dt*3.2);
+    }
+  } else S.nerve=Math.min(100,S.nerve+dt*3.6);
+  animateEntity(t,walking);
+}
+
+/* =========================================================
+   16. PROP ANIMATION + MENU CAMERA
+========================================================= */
+function animateProps(dt,t){
+  /* fridge door swings open while reading */
+  const fTarget=S.fridgeOpen?-1.15:0;
+  fridgeHinge.rotation.y += (fTarget-fridgeHinge.rotation.y)*dt*4;
+  fridgeInner.intensity = Math.max(0,-fridgeHinge.rotation.y)*2.2;
+  /* cupboard doors: OPEN when empty, CLOSED once you are inside */
+  const clT = S.hiding ? 0 : 0.55;
+  clHingeL.rotation.y += ( clT-clHingeL.rotation.y)*dt*5;
+  clHingeR.rotation.y += (-clT-clHingeR.rotation.y)*dt*5;
+  /* light switch nub */
+  switchNub.position.y += (((S.hallLightOn?1.38:1.46))-switchNub.position.y)*dt*10;
+  /* front door shakes when knocked */
+  if(S.knockShake>0){
+    S.knockShake=Math.max(0,S.knockShake-dt*0.6);
+    doorPivot.position.x=-1.3+Math.sin(t*40)*0.012*S.knockShake;
+  } else doorPivot.position.x=-1.3;
+  /* locked hallway doors rattle when tried */
+  hallDoors.forEach(d=>{
+    if(d.shake>0){ d.shake=Math.max(0,d.shake-dt*1.4);
+      d.group.position.x = d.baseX + Math.sin(t*45)*0.01*d.shake; }
+    else d.group.position.x = d.baseX;
+  });
+  /* phone receiver rattles while ringing */
+  receiver.position.y = 0.09 + (S.calling?Math.abs(Math.sin(t*26))*0.012:0);
+  /* curtain wave */
+  const pos=curtain.geometry.attributes.position;
+  for(let i=0;i<pos.count;i++){
+    const bx=curtainBase[i*3], by=curtainBase[i*3+1];
+    pos.setZ(i, Math.sin(t*1.6+bx*1.7+by*0.6)*0.06*(1-Math.abs(by)/0.9));
+  }
+  pos.needsUpdate=true;
+  /* lights + TV */
+  bulb.intensity = 14+Math.sin(t*8.7)*0.6+(Math.random()<0.008?-6:0);
+  glassBulb.material.emissiveIntensity = 2.2+Math.sin(t*8.7)*0.3;
+  hallLight.intensity += ((S.hallLightOn?22:0)-hallLight.intensity)*dt*6;
+  hallGlow.intensity = 2.2+Math.sin(t*1.6)*0.4;
+  if(S.tvOn){ drawStatic(); M.screen.emissiveIntensity=1.1+Math.random()*0.5;
+    tvLight.intensity=7+Math.random()*3; }
+  else { M.screen.emissiveIntensity=0; tvLight.intensity=0; }
+  scene.fog.density = 0.045 + Math.max(0,(45-S.nerve))*0.0012;
+}
+/* animated fly-around behind the main menu */
+function menuCamera(t){
+  const r=3.2;
+  camera.position.set(Math.sin(t*0.12)*r*0.6+0.5, 1.65+Math.sin(t*0.35)*0.06, 2.4+Math.cos(t*0.12)*r*0.25);
+  camera.lookAt(-3.4+Math.sin(t*0.2)*0.5, 1.35, -3.4);
+}
+
+/* =========================================================
+   17. LOOP
+========================================================= */
+const clock=new THREE.Clock();
+function animate(){
+  requestAnimationFrame(animate);
+  const dt=Math.min(0.05,clock.getDelta()), t=clock.elapsedTime;
+  if(S.mode==='menu'&&!S.overlay) menuCamera(t);
+  move(dt);
+  updateScript(dt);
+  animateFlashlight(dt);
+  updateFocus();
+  updateMeters(dt);
+  updateEntity(dt,t);
+  animateProps(dt,t);
+  if(A.humGain) A.humGain.gain.value = 0.05/(1+camera.position.distanceTo(fridge.position)*0.25);
+  renderer.render(scene,camera);
+}
+resize();
+addEventListener('resize',resize);
+addEventListener('orientationchange',()=>setTimeout(resize,250));
+
+/* ---- phone friendly endings + help text ---- */
+if(IS_TOUCH){
+  $('audioHint').textContent='tap anywhere to enable ambient sound';
+  document.querySelectorAll('.screen .cta, #credits .end').forEach(el=>{
+    el.textContent='TAP TO PLAY AGAIN';
+  });
+  ['over','win','credits'].forEach(id=>$(id).addEventListener('pointerdown',()=>{
+    if(S.mode==='dead'||S.mode==='won') location.reload();
+  }));
+  const how=$('pHow').querySelector('ol');
+  how.insertAdjacentHTML('afterbegin',
+    '<li>PHONE CONTROLS: left stick walks, drag the right half of the screen to look,'+
+    ' USE interacts, LIGHT is the flashlight, RUN sprints, MENU pauses.</li>');
+}
+objective('Read the rules on the fridge');
+animate();
+window.__gameBooted=true;
+</script>
+</body>
+</html>
