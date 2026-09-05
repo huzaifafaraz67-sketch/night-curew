@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <!--
@@ -246,7 +247,7 @@ body.touch.playing #touch{display:block}
   NERVE <span class="bar" id="sanBar"><i style="width:100%"></i></span><br>
   <span style="color:#8d8676">[F] light &nbsp; [E] use &nbsp; [SHIFT] run &nbsp; [ESC] pause</span>
 </div>
-<div class="hud" id="hudR"><span id="clock">12:00 AM</span><br>
+<div class="hud" id="hudR"><span id="clock">11:00 PM</span><br>
   <span id="state" style="color:#8d8676">kitchen</span></div>
 <div id="prompt">Press [E] to Read Rules</div>
 <div id="subs"></div>
@@ -270,32 +271,36 @@ body.touch.playing #touch{display:block}
   <h1>THE MIDNIGHT<span>CURFEW</span></h1>
   <div class="tag">Mom's shift ends at 6:00 AM. Five rules until then.</div>
   <nav>
-    <button class="mi" id="btnStart">START NIGHT <small>click to lock mouse</small></button>
+    <button class="mi" id="btnStart">START NIGHT <small>11:00 PM &mdash; story mode</small></button>
+    <button class="mi" id="btnPractice">PRACTICE MODE <small>nothing comes for you &middot; clock frozen</small></button>
     <button class="mi" id="btnStory">STORY</button>
     <button class="mi" id="btnRules">THE FIVE RULES</button>
     <button class="mi" id="btnHow">HOW TO PLAY</button>
     <button class="mi" id="btnRetro">RETRO FILTER <small id="retroState">OFF</small></button>
     <button class="mi" id="btnSound">SOUND <small id="soundState">ON</small></button>
   </nav>
-  <div class="legal">Three.js r160 &middot; procedural audio &middot; no external assets</div>
+  <div class="legal">A game by HUZAIFAA &middot; built with OreateAI<br>
+    Three.js r160 &middot; procedural audio &middot; no external assets</div>
   <div id="audioHint">click anywhere to enable ambient sound</div>
 </div>
 <!-- ===== PANELS ===== -->
 <div class="panel" id="pStory"><div class="sheet">
   <h2>STORY</h2>
-  <div class="note">apartment 4B, Kessler Row &mdash; two weeks after</div>
-  <p>Leo Vance is nine. Since Dad left, Mom works the 11 PM to 6 AM shift at the packing
-  plant, so the nights belong to Leo and the long hallway outside his kitchen.</p>
-  <p>Two weeks ago Ada from 4C was babysitting. At 2 AM someone knocked and said it was
-  Mom. Ada opened the door. The police found her shoes in the hallway, still laced,
-  pointing at the wall.</p>
-  <p>Grandma taped a sheet of notebook paper to the fridge and made Mom promise to read
-  it out loud every night. The thing in the hallway cannot come inside on its own &mdash;
-  it has to be invited. So it practises. It copies voices, it knocks politely, and it
-  waits for you to look at it. The moment it knows you can see it, it stops pretending.</p>
-  <p>Tonight there is no babysitter. Six hours, five rules, one flashlight with a dying
-  battery.</p>
-  <div class="foot">Mom's shift ends at 6:00 AM. Stay inside. Stay on the list.</div>
+  <div class="note">apartment 4B, Kessler Row &mdash; night one of the curfew</div>
+  <p>Leo Vance is nine. Since Dad left, Mom takes the 11 PM to 6 AM shift at the packing
+  plant, and Kessler Row empties out after dark. 4C, 4D, 4E, 4F: condemned since the fire,
+  doors still locked, hallway lights still wired to Leo's switch.</p>
+  <p>Two weeks ago Ada from 4C was babysitting &mdash; the last person on the floor besides
+  them. At 2 AM someone knocked and said it was Mom. Ada opened the door. The police found
+  her shoes in the hallway, still laced, pointing at the wall.</p>
+  <p>Grandma taped a sheet of notebook paper to the fridge and made Mom promise Leo would
+  read it out loud every night. The thing in the hallway cannot come in on its own &mdash;
+  it has to be let in. So it practises. It knocks politely. It learns voices from behind the
+  doors: the delivery man, Mom, Ada, and now Leo. The moment it knows you can see it, it
+  stops pretending to be a person.</p>
+  <p>Tonight nobody is babysitting. Seven hours, five rules, one flashlight with a dying
+  battery, and a cupboard with a latch on the inside.</p>
+  <div class="foot">11:00 PM &mdash; the deadbolt turns from the outside. Stay inside. Stay on the list.</div>
   <div class="close" data-close="pStory">[E] / [ESC] / click to close</div>
 </div></div>
 
@@ -315,14 +320,17 @@ body.touch.playing #touch{display:block}
 
 <div class="panel" id="pHow"><div class="sheet">
   <h2>HOW TO PLAY</h2>
-  <div class="note">survive from 12:00 AM to 6:00 AM</div>
+  <div class="note">survive from 11:00 PM to 6:00 AM &mdash; 30 real seconds = 2 minutes on the clock</div>
   <ol>
     <li>WASD to move, SHIFT to run, mouse to look. ESC releases the mouse.</li>
     <li>[F] toggles the flashlight. The battery drains and flickers when low.</li>
-    <li>[E] interacts with anything highlighted within reach: fridge, notes, light switch, TV, phone, closet, front door.</li>
-    <li>NERVE drops while you break a rule and slowly recovers when you behave. At zero, the night ends badly.</li>
-    <li>When it calls your name, get into the closet and press [E]. Come out only when it goes quiet.</li>
-    <li>Never open the front door before 6:00 AM. At exactly 6:00 AM, open it.</li>
+    <li>[E] interacts with anything highlighted within reach: fridge, notes, light switch, TV, phone, cupboard, front door.</li>
+    <li>The clock waits for the story: it stops at 11:04 PM until you read the rules, and again two minutes later until you eat on the couch.</li>
+    <li>You cannot walk through furniture. The cupboard is the only safe place in the flat.</li>
+    <li>NERVE drops while you break a rule and recovers when you behave. At zero, the night ends badly.</li>
+    <li>After 5:00 AM it knocks five times. Each time: get in the cupboard, stay in for six seconds.</li>
+    <li>Never open the front door before 6:00 AM. At 6:00 AM, open it.</li>
+    <li>PRACTICE MODE: same flat, no monster, frozen clock, nothing can kill you.</li>
   </ol>
   <div class="foot">Tip: the TV masks sound and adds light, but light attracts attention.</div>
   <div class="close" data-close="pHow">[E] / [ESC] / click to close</div>
@@ -355,6 +363,8 @@ body.touch.playing #touch{display:block}
   <div class="roll">
     <div class="sec"><h2>THE MIDNIGHT CURFEW</h2>
       <div class="val">NIGHT 1 &mdash; COMPLETE</div></div>
+    <div class="sec"><div class="lbl">CREATED BY</div>
+      <div class="val">HUZAIFAA</div></div>
     <div class="sec"><div class="lbl">SURVIVED BY</div>
       <div class="val">Leo Vance, age 9<br>Apartment 4B, Kessler Row</div></div>
     <div class="sec"><div class="lbl">THE FIVE RULES</div>
@@ -362,7 +372,8 @@ body.touch.playing #touch{display:block}
         Hide when it calls your name<br>Never open the fridge twice in an hour<br>
         Never let it learn that you can see it</div></div>
     <div class="sec"><div class="lbl">IN MEMORY OF</div>
-      <div class="val">Ada, 4C &mdash; who answered the door</div></div>
+      <div class="val">Ada, 4C &mdash; who answered the door<br>
+        and 4D, 4E, 4F &mdash; empty since the fire</div></div>
     <div class="sec"><div class="lbl">ENGINE</div><div class="val">Three.js r160</div></div>
     <div class="sec"><div class="lbl">GRAPHICS</div>
       <div class="val">Procedural canvas textures<br>Real-time shadow mapping<br>
@@ -371,9 +382,11 @@ body.touch.playing #touch{display:block}
       <div class="val">Procedural WebAudio<br>room drone &middot; fridge hum &middot; wind &middot; knocks</div></div>
     <div class="sec"><div class="lbl">ANIMATION</div>
       <div class="val">Hand-keyed walk cycle<br>Hinged doors &middot; swaying curtain &middot; camera breathing</div></div>
+    <div class="sec"><div class="lbl">DESIGN &middot; CODE &middot; SOUND</div>
+      <div class="val">Huzaifaa<br>with OreateAI</div></div>
     <div class="sec"><div class="lbl">AND FINALLY</div>
       <div class="val">Mom got home at 6:00 AM.<br>She read the list out loud again.<br>
-        Night 2 is tomorrow.</div></div>
+        There were five knocks last night.<br>Night 2 is tomorrow.</div></div>
   </div>
   <div class="end">PRESS [R] TO PLAY AGAIN</div>
 </div>
@@ -637,7 +650,7 @@ box(3.05,0.06,0.9,M.metal,-3.2,0.92,3.35);
 box(1.7,0.08,1.1,M.wood, 3.0,0.75,-1.0);
 for(const c of [[2.3,-1.6],[3.7,-1.6],[2.3,-0.4],[3.7,-0.4]]) box(0.1,0.75,0.1,M.wood,c[0],0.37,c[1]);
 box(0.45,0.5,0.5,M.metal,-4.3,1.2,3.35);
-box(0.42,0.95,0.42,M.dark, 2.2,0.47,2.7);
+box(0.42,0.95,0.42,M.dark,-0.25,0.47,4.35);
 box(1.3,0.62,0.45,M.wood, 4.35,0.31,1.9);
 
 /* =========================================================
@@ -752,35 +765,179 @@ const hallDoors=[];
 });
 
 /* =========================================================
+   6b. HOUSE DRESSING  (more of a real flat + solid furniture)
+========================================================= */
+/* --- simple axis-aligned blockers so you cannot walk through furniture --- */
+const BLOCKERS=[];
+const blk=(x,z,hw,hd)=>{ BLOCKERS.push({x,z,hw,hd}); };
+blk(-3.2,3.35,1.5,0.46);    // counter
+blk(-4.15,-3.6,0.72,0.42);  // fridge
+blk(3.0,-1.0,0.9,0.6);      // dining table
+blk(4.35,1.9,0.68,0.34);    // tv unit
+blk(4.05,-4.0,0.95,0.55);   // cupboard
+blk(2.6,3.28,1.18,0.42);    // couch
+blk(-0.25,4.35,0.26,0.26);  // bin by the front door
+
+/* --- kitchen: upper cabinets, sink, tap --- */
+box(3.0,0.72,0.36,M.wood,-3.2,2.18,ROOM.d/2-0.38);
+box(3.0,0.04,0.36,M.dark,-3.2,1.80,ROOM.d/2-0.38,0,false);
+box(0.86,0.12,0.56,M.metal,-3.95,0.94,3.35,0,false);
+box(0.06,0.34,0.06,M.metal,-3.95,1.14,3.60,0,false);
+box(0.22,0.05,0.06,M.metal,-3.86,1.30,3.60,0,false);
+box(0.5,0.02,0.34,std({color:0x6d6a5e,roughness:1}),-2.55,0.96,3.20,0.2,false);
+
+/* --- rug, coffee table, mug --- */
+const rugTex=canvasTex(128,128,(c,w,h)=>{
+  c.fillStyle='#4b3f36'; c.fillRect(0,0,w,h);
+  c.strokeStyle='#6d5c48'; c.lineWidth=4; c.strokeRect(8,8,w-16,h-16);
+  c.strokeStyle='#3a3129'; c.lineWidth=2;
+  for(let i=16;i<w;i+=14){ c.beginPath(); c.moveTo(i,0); c.lineTo(i,h); c.stroke(); }
+  noiseOverlay(c,w,h,.3,2);
+});
+box(3.4,0.03,2.4,std({map:rugTex,roughness:1}),1.6,0.02,1.5,0.06,false);
+box(1.15,0.07,0.62,M.wood,1.5,0.44,1.6,-0.08);
+for(const c of [[1.0,1.35],[2.0,1.35],[1.0,1.85],[2.0,1.85]])
+  box(0.07,0.42,0.07,M.wood,c[0],0.22,c[1],0,false);
+box(0.16,0.14,0.16,std({color:0xd9d2c2,roughness:.5}),1.25,0.55,1.55,0,false);
+blk(1.5,1.6,0.6,0.34);
+
+/* --- bookshelf by the TV --- */
+const shelf=new THREE.Group(); shelf.position.set(4.62,0,-1.7); scene.add(shelf);
+shelf.add(mesh(B(0.34,1.9,1.2),M.wood,0,0.95,0));
+for(let i=0;i<3;i++) shelf.add(mesh(B(0.3,0.04,1.1),M.dark,0.02,0.5+i*0.5,0));
+for(let i=0;i<9;i++){
+  const bh=0.22+Math.random()*0.1;
+  shelf.add(mesh(B(0.2,bh,0.05+Math.random()*0.05),
+    std({color:new THREE.Color().setHSL(Math.random(),0.3,0.25),roughness:.9}),
+    0.02,0.5+Math.floor(i/3)*0.5+bh/2+0.02,-0.45+(i%3)*0.16+Math.random()*0.1));
+}
+blk(4.62,-1.7,0.2,0.62);
+
+/* --- dead plant by the window --- */
+const plant=new THREE.Group(); plant.position.set(4.35,0,-3.5); scene.add(plant);
+plant.add(mesh(new THREE.CylinderGeometry(0.2,0.15,0.34,10),std({color:0x7a4a34,roughness:.9}),0,0.17,0));
+for(let i=0;i<6;i++){
+  const st=mesh(B(0.03,0.62,0.03),std({color:0x4c4a2a,roughness:1}),0,0.62,0);
+  st.rotation.set((Math.random()-0.5)*0.7,Math.random()*3,(Math.random()-0.5)*0.7);
+  plant.add(st);
+}
+blk(4.35,-3.5,0.22,0.22);
+
+/* --- framed photos on the left wall --- */
+const frameTex=canvasTex(96,96,(c,w,h)=>{
+  c.fillStyle='#8d8676'; c.fillRect(0,0,w,h);
+  c.fillStyle='#5b5648'; c.fillRect(10,10,w-20,h-20);
+  c.fillStyle='#a49a86'; c.beginPath(); c.arc(w/2,h*0.42,14,0,7); c.fill();
+  c.fillRect(w/2-16,h*0.56,32,26);
+  noiseOverlay(c,w,h,.35,2);
+});
+[[-1.9,1.9],[0.6,1.72],[2.6,1.95]].forEach((p,i)=>{
+  box(0.03,0.42,0.34,std({map:frameTex,roughness:.9}),-ROOM.w/2+0.13,p[1],p[0],0,false);
+});
+
+/* --- wall clock above the hallway doorway (hands follow the game clock) --- */
+const wallClock=new THREE.Group(); wallClock.position.set(0,2.62,-ROOM.d/2+0.14); scene.add(wallClock);
+const clockCase=mesh(new THREE.CylinderGeometry(0.24,0.24,0.05,20),M.dark,0,0,0);
+clockCase.rotation.x=Math.PI/2; wallClock.add(clockCase);
+const clockFace=mesh(new THREE.CylinderGeometry(0.2,0.2,0.02,20),std({color:0xe6e0cc,roughness:.8}),0,0,0.035);
+clockFace.rotation.x=Math.PI/2; wallClock.add(clockFace);
+const handH=mesh(B(0.03,0.12,0.01),M.dark,0,0.06,0.05); const handHPivot=new THREE.Group();
+handHPivot.add(handH); wallClock.add(handHPivot);
+const handM=mesh(B(0.02,0.17,0.01),std({color:0x7a2020,roughness:.7}),0,0.085,0.055);
+const handMPivot=new THREE.Group(); handMPivot.add(handM); wallClock.add(handMPivot);
+
+/* --- hallway: caged ceiling lamps, runner, end table --- */
+const hallLamps=[];
+[-8.5,-15.5].forEach(z=>{
+  const g=new THREE.Group(); g.position.set(0,ROOM.h-0.18,z); scene.add(g);
+  g.add(mesh(new THREE.SphereGeometry(0.11,10,8),
+    std({color:0xfff0d0,emissive:0xffe0a8,emissiveIntensity:0,roughness:.4}),0,-0.06,0));
+  g.add(mesh(new THREE.TorusGeometry(0.15,0.012,6,12),M.metal,0,-0.06,0));
+  const L=new THREE.PointLight(0xd8e6ff,0,7,2); L.position.set(0,-0.1,0); g.add(L);
+  hallLamps.push({light:L, glass:g.children[0], flick:Math.random()*9});
+});
+box(2.2,0.02,12,std({map:rugTex,roughness:1}),0,0.012,-12,0,false);
+box(0.9,0.06,0.4,M.wood,0,0.78,-18.6,0,false);
+for(const x of [-0.4,0.4]) box(0.06,0.78,0.06,M.wood,x,0.39,-18.6,0,false);
+box(0.16,0.3,0.16,std({color:0x3e4a52,roughness:.6}),0,0.95,-18.6,0,false);
+blk(0,-18.6,0.5,0.25);
+
+/* --- door numbers on the locked hallway doors --- */
+const numTex=t=>canvasTex(64,64,(c,w,h)=>{
+  c.fillStyle='#c9c2ae'; c.fillRect(0,0,w,h);
+  c.fillStyle='#26242a'; c.font='bold 34px monospace'; c.textAlign='center';
+  c.fillText(t,w/2,h/2+12); noiseOverlay(c,w,h,.25,2);
+});
+['4C','4D','4E','4F'].forEach((n,i)=>{
+  const d=hallDoors[i]; if(!d) return;
+  const plate=mesh(B(0.16,0.16,0.02),std({map:numTex(n),roughness:.9}),-0.36,1.62,0.06);
+  d.group.add(plate);
+});
+
+/* =========================================================
    7. THE ENTITY  -  rigged limbs + walk cycle animation
 ========================================================= */
+/* it is tall, thin and wrong: long coat, long arms, a pale mask instead of a face */
+M.coat = std({color:0x191820, roughness:.96});
+M.mask = std({color:0xcfc7b4, roughness:.55, emissive:0x2a1c14, emissiveIntensity:.35});
 const entity=new THREE.Group();
-const torso=mesh(B(0.6,1.05,0.34),M.suit,0,0,0); torso.position.y=1.12; entity.add(torso);
-const neck=mesh(B(0.14,0.16,0.14),M.skin,0,1.72,0); entity.add(neck);
-const head=mesh(B(0.36,0.4,0.34),M.skin,0,1.98,0); entity.add(head);
-head.add(mesh(B(0.07,0.03,0.02),std({color:0x0a0a0c}),-0.09,0.04,0.17));
-head.add(mesh(B(0.07,0.03,0.02),std({color:0x0a0a0c}), 0.09,0.04,0.17));
-const armL=new THREE.Group(); armL.position.set(-0.38,1.6,0); entity.add(armL);
-armL.add(mesh(B(0.15,0.92,0.15),M.suit,0,-0.46,0));
-const armR=new THREE.Group(); armR.position.set( 0.38,1.6,0); entity.add(armR);
-armR.add(mesh(B(0.15,0.92,0.15),M.suit,0,-0.46,0));
-const legL=new THREE.Group(); legL.position.set(-0.15,0.62,0); entity.add(legL);
-legL.add(mesh(B(0.18,1.0,0.18),M.suit,0,-0.5,0));
-const legR=new THREE.Group(); legR.position.set( 0.15,0.62,0); entity.add(legR);
-legR.add(mesh(B(0.18,1.0,0.18),M.suit,0,-0.5,0));
+entity.scale.setScalar(0.78);                      // ~2.25 m: it only just fits the doorframe
+const hips=new THREE.Group(); hips.position.y=0.98; entity.add(hips);
+const torso=mesh(B(0.5,1.0,0.28),M.coat,0,0.5,0); hips.add(torso);
+const chest=mesh(B(0.56,0.34,0.3),M.coat,0,1.12,0); hips.add(chest);
+/* ragged coat skirt */
+for(let i=0;i<7;i++){
+  const f=mesh(B(0.1,0.5+Math.random()*0.3,0.06),M.coat,-0.24+i*0.08,-0.22,0.12);
+  f.rotation.x=0.06; hips.add(f);
+}
+const neck=mesh(B(0.1,0.26,0.1),M.mask,0,1.4,0); hips.add(neck);
+const head=mesh(B(0.3,0.4,0.28),M.mask,0,1.72,0); hips.add(head);
+/* hollow sockets + a too-wide seam of a mouth */
+head.add(mesh(B(0.09,0.07,0.03),std({color:0x08080a}),-0.075,0.05,0.14));
+head.add(mesh(B(0.09,0.07,0.03),std({color:0x08080a}), 0.075,0.05,0.14));
+head.add(mesh(B(0.22,0.015,0.02),std({color:0x1a0d0c}),0,-0.1,0.145));
+for(let i=0;i<10;i++){                              // thin wet hair
+  const s=mesh(B(0.015,0.34,0.015),std({color:0x0d0c10,roughness:1}),
+    -0.12+Math.random()*0.24,0.02,-0.1+Math.random()*0.05);
+  s.rotation.z=(Math.random()-0.5)*0.4; head.add(s);
+}
+const armL=new THREE.Group(); armL.position.set(-0.32,1.32,0); hips.add(armL);
+const foreL=new THREE.Group(); foreL.position.y=-0.56; armL.add(foreL);
+armL.add(mesh(B(0.11,0.58,0.11),M.coat,0,-0.28,0));
+foreL.add(mesh(B(0.09,0.56,0.09),M.mask,0,-0.28,0));
+for(let i=0;i<4;i++) foreL.add(mesh(B(0.02,0.2,0.02),M.mask,-0.045+i*0.03,-0.66,0));
+const armR=new THREE.Group(); armR.position.set( 0.32,1.32,0); hips.add(armR);
+const foreR=new THREE.Group(); foreR.position.y=-0.56; armR.add(foreR);
+armR.add(mesh(B(0.11,0.58,0.11),M.coat,0,-0.28,0));
+foreR.add(mesh(B(0.09,0.56,0.09),M.mask,0,-0.28,0));
+for(let i=0;i<4;i++) foreR.add(mesh(B(0.02,0.2,0.02),M.mask,-0.045+i*0.03,-0.66,0));
+const legL=new THREE.Group(); legL.position.set(-0.13,0,0); hips.add(legL);
+legL.add(mesh(B(0.13,0.98,0.13),M.coat,0,-0.49,0));
+legL.add(mesh(B(0.15,0.08,0.26),M.dark,0,-0.96,0.06));
+const legR=new THREE.Group(); legR.position.set( 0.13,0,0); hips.add(legR);
+legR.add(mesh(B(0.13,0.98,0.13),M.coat,0,-0.49,0));
+legR.add(mesh(B(0.15,0.08,0.26),M.dark,0,-0.96,0.06));
 entity.position.set(0,0,-13); entity.visible=false; scene.add(entity);
-const entityEyes=new THREE.PointLight(0xff6a4a,0,3.5,2);
-entityEyes.position.set(0,1.98,0.2); entity.add(entityEyes);
+const entityEyes=new THREE.PointLight(0xff5a34,0,4.2,2);
+entityEyes.position.set(0,2.7,0.25); entity.add(entityEyes);
 
+let entTwitch=0;
 function animateEntity(t, walking){
-  const s = walking ? Math.sin(t*4.4) : Math.sin(t*1.1)*0.15;
-  legL.rotation.x =  s*0.7;
-  legR.rotation.x = -s*0.7;
-  armL.rotation.x = -s*0.5;
-  armR.rotation.x =  s*0.5;
-  torso.rotation.z = Math.sin(t*2.2)*0.03;
-  head.rotation.z  = Math.sin(t*0.7)*0.12;
-  head.position.y  = 1.98 + Math.abs(Math.sin(t*4.4))*0.02;
+  const s = walking ? Math.sin(t*4.0) : Math.sin(t*1.05)*0.12;
+  legL.rotation.x =  s*0.62;
+  legR.rotation.x = -s*0.62;
+  armL.rotation.x = -s*0.42 - 0.1;
+  armR.rotation.x =  s*0.42 - 0.1;
+  foreL.rotation.x = -0.5+Math.sin(t*2.1)*0.18;    // long arms hang broken
+  foreR.rotation.x = -0.5-Math.sin(t*2.1)*0.18;
+  hips.position.y  = 0.98 + (walking?Math.abs(Math.sin(t*4.0))*0.035:Math.sin(t*1.3)*0.012);
+  torso.rotation.z = Math.sin(t*1.8)*0.025;
+  chest.rotation.x = 0.08 + Math.sin(t*1.4)*0.02;  // hunched, breathing
+  /* every few seconds the head snaps to a new angle and holds it */
+  entTwitch-=1/60;
+  if(entTwitch<=0){ entTwitch=1.2+Math.random()*2.6; head.userData.tilt=(Math.random()-0.5)*0.85; }
+  head.rotation.z += ((head.userData.tilt||0)-head.rotation.z)*0.12;
+  head.rotation.x = Math.sin(t*0.8)*0.06;
 }
 
 /* =========================================================
@@ -874,8 +1031,23 @@ const S={ mode:'menu', overlay:null, flashOn:false, battery:100, nerve:100, minu
   /* ---- scripted night ---- */
   stage:'intro',      // intro > delivery > pickup > couch > eating > sleep > night > dawn > credits
   carrying:false, sitting:false, eatT:0, sleepT:0,
-  round:0, ROUNDS:5, roundWait:8, hideWindow:0, hiddenFor:0, safe:false };
-const MIN_PER_SEC=3;
+  round:0, ROUNDS:5, roundWait:8, hideWindow:0, hiddenFor:0, safe:false,
+  /* ---- clock ----  minutes counted from 11:00 PM, 6:00 AM = 420 ---- */
+  timeCap:4,          // clock freezes when it reaches this, null = free running
+  power:true,
+  practice:false };
+const MIN_PER_SEC=2/30;      // 30 real seconds = 2 minutes on the clock
+const DAWN=420;              // 6:00 AM
+const WAKE=360;              // 5:00 AM
+
+/* 11:00 PM + n minutes -> "11:04 PM" */
+function clockText(mins){
+  const tot=(23*60+Math.floor(mins))%1440;
+  const h24=Math.floor(tot/60), m=tot%60;
+  const h=(h24%12===0)?12:h24%12;
+  return h+':'+String(m).padStart(2,'0')+' '+(h24<12?'AM':'PM');
+}
+function gameHour(){ return Math.floor((23*60+S.minutes)/60)%24; }
 
 function say(t,ms=3400){ $('subs').textContent=t; $('subs').style.opacity=1;
   clearTimeout(say._t); say._t=setTimeout(()=>$('subs').style.opacity=0,ms); }
@@ -953,7 +1125,8 @@ if(IS_TOUCH) bindTouch();
 
 /* menu buttons */
 addEventListener('pointerdown',()=>audioInit(),{once:true});
-$('btnStart').onclick=()=>{ SFX.click(); audioInit(); startNight(); };
+$('btnStart').onclick=()=>{ SFX.click(); audioInit(); startNight(false); };
+$('btnPractice').onclick=()=>{ SFX.click(); audioInit(); startNight(true); };
 $('btnStory').onclick=()=>{ SFX.click(); showPanel('pStory'); };
 $('btnRules').onclick=()=>{ SFX.click(); showPanel('pRules'); };
 $('btnHow').onclick  =()=>{ SFX.click(); showPanel('pHow'); };
@@ -970,11 +1143,19 @@ function hidePanel(){
   $(S.overlay).style.display='none'; S.overlay=null;
   if(S.mode==='play'&&!IS_TOUCH) controls.lock();
 }
-function startNight(){
+function startNight(practice){
+  S.practice=!!practice;
+  S.power=true; powerBack();
+  S.minutes=0; S.timeCap=S.practice?0:4;      // 11:00 PM, stops at 11:04
   hidePanel(); enterPlay();
-  objective('Read the rules on the fridge');
-  say(IS_TOUCH?'Drag the right side to look, use the stick to walk.'
-             :'Mom locked the door at 11. Six hours to go.',4600);
+  objective(S.practice?'PRACTICE - explore. Nothing comes tonight.'
+                      :'Read the rules on the fridge');
+  if(S.practice){
+    say('Practice mode. The clock is frozen at 11:00 and the hallway is empty.',5200);
+  } else {
+    say(IS_TOUCH?'Drag the right side to look, use the stick to walk.'
+               :'11:00 PM. Mom just locked the door. Seven hours to go.',4600);
+  }
 }
 
 /* =========================================================
@@ -1024,11 +1205,18 @@ function interact(){
   if(S.sitting){ return; }
   if(S.hiding){ leaveCloset(); return; }
   if(!focus) return;
-  const hour=Math.floor(S.minutes/60);
+  const hour=gameHour();
   switch(focus.userData.action){
     case 'rules':
-      if(S.readRules && S.fridgeHourUsed===hour) nerveHit(28,'You opened the fridge twice in the same hour. Rule 4.');
-      S.fridgeHourUsed=hour; S.readRules=true; S.fridgeOpen=true;
+      if(S.readRules && S.fridgeHourUsed===hour && S.stage!=='intro')
+        nerveHit(14,'You opened the fridge twice in the same hour. Rule 4.');
+      S.fridgeHourUsed=hour;
+      if(!S.readRules && !S.practice){
+        /* reading the letter starts the clock again - it runs 2 more minutes */
+        S.timeCap=Math.max(S.minutes,4)+2;
+        say('The clock on the microwave starts moving again.',3000);
+      }
+      S.readRules=true; S.fridgeOpen=true;
       SFX.doorOpen();
       openRead('THE MIDNIGHT RULES',"taped to the fridge door \u2014 Grandma's handwriting",
         RULES_LIST,"Leo \u2014 I love you. Just do the list. I'll be home before sunrise.");
@@ -1037,29 +1225,34 @@ function interact(){
       break;
     case 'halldoor':
       SFX.doorOpen(); shakeHallDoor(focus);
-      say('Locked. Every door in the hallway is locked from the other side.');
+      say(HALL_LINES[(hallLine++)%HALL_LINES.length],4200);
       break;
     case 'food':
       S.carrying=true; foodBox.visible=false; S.stage='couch';
       SFX.creak();
-      say('Why is the food on the floor? Nobody opened the door. Nobody could have.',5200);
+      say('Warm. Somebody carried it up four flights. Nobody opened the door.',5200);
       objective('Sit on the couch and eat');
       break;
     case 'couch': sitDown(); break;
     case 'letter':
       SFX.creak();
-      openRead('NOTE ON THE WALL','ballpoint pen, shaky handwriting',
+      if(!S.practice && S.timeCap!==null && S.timeCap<=4) S.timeCap=Math.max(S.minutes,4)+2;
+      openRead('NOTE ON THE WALL','ballpoint pen, shaky handwriting \u2014 Grandma',
         '<li>The hallway bulb is new. It turns itself on when it wants you to look.</li>'+
         '<li>The cupboard latch works from the inside. Ada never used it.</li>'+
-        '<li>If it copies your voice, it has already been listening for weeks.</li>',
-        'Do the list, Leo. Every night. \u2014 Grandma');
+        '<li>It always knocks three times. Three is polite. Three is practice.</li>'+
+        '<li>If it copies your voice, it has been listening at the door for weeks.</li>'+
+        '<li>4C, 4D, 4E, 4F are empty. Whatever answers from them is not a neighbour.</li>',
+        'Do the list, Leo. Every night. I will come on Sunday. \u2014 Grandma');
       break;
     case 'switch':
+      if(!S.power){ SFX.flip(); say('The switch clicks. Nothing. The power is out.'); break; }
       S.hallLightOn=!S.hallLightOn; SFX.flip();
       say(S.hallLightOn?'The hallway light hums on. Rule 1: do not look down the hallway.'
                        :'The hallway goes dark again.');
       break;
     case 'tv':
+      if(!S.power){ SFX.flip(); say('Dead screen. No power.'); break; }
       S.tvOn=!S.tvOn; SFX.flip();
       say(S.tvOn?'Static fills the room. The noise makes the flat feel occupied.':'You switch the TV off.');
       break;
@@ -1085,35 +1278,60 @@ function shakeHallDoor(leaf){
 /* =========================================================
    11b. SCRIPTED NIGHT
 ========================================================= */
+/* --- story lines --- */
+let hallLine=0;
+const HALL_LINES=[
+  'Locked. 4C. Ada used to leave a key under the mat. The mat is gone.',
+  'Locked from the other side. All of them are locked from the other side.',
+  'Something breathes out, once, right behind the wood. You do not knock back.',
+  '4F has no handle at all. It never did.',
+  'You hear your own knock answered half a second late, like a copy.'
+];
+const ROUND_LINES=[
+  'Three knocks. A delivery man\u2019s voice: "Order for Vance?" You never gave a name. HIDE.',
+  'Three knocks. Mom\u2019s voice, too slow: "Leo. Open up, baby." Mom is at the plant. HIDE.',
+  'Three knocks. Ada\u2019s voice, from two weeks ago: "It is only me, sweetheart." HIDE.',
+  'Three knocks. Your own voice, from inside the kitchen: "I am already in." HIDE.',
+  'No knock this time. Just the floor taking weight, one board at a time. HIDE.'
+];
+const ROUND_AFTER=[
+  'It gives up on being polite. Come out.',
+  'It walks off down the hall counting doors. 4C. 4D. 4E.',
+  'Something wet is left on the floor where it stood. Do not touch it.',
+  'It laughs with your mouth, badly, and stops. Come out.',
+  'Footsteps go away down the hall. Then a key. A real key.'
+];
 function beginDelivery(){
   S.stage='delivery';
-  objective('Answer nothing. Just look.');
+  objective('Do not answer the door. Just listen.');
   setTimeout(()=>{
     S.knocking=true; S.knockShake=1; SFX.knock();
-    say('Three knocks at the front door.',3600);
+    say('Three knocks at the front door. Polite. Evenly spaced.',3600);
   },2600);
   setTimeout(()=>{
-    say('Oh \u2014 I remember. I ordered food.',3600);
-  },7000);
+    say('A man\u2019s voice: "Late Nite Pizza. Leaving it at the door." Nobody ordered.',5000);
+  },6600);
   setTimeout(()=>{
     S.knocking=false; S.stage='pickup'; foodBox.visible=true;
-    SFX.creak(); say('The box is already inside. Sitting on the kitchen floor.',4600);
+    SFX.creak(); say('The box is already inside. On the kitchen floor. The deadbolt never moved.',5200);
     objective('Pick up the food');
-  },11000);
+  },11800);
 }
 function sitDown(){
   if(!S.carrying){ say('You should eat first. The box is on the floor.'); return; }
   S.sitting=true; S.stage='eating'; S.eatT=0;
+  S.timeCap=null;                      // eating on the couch lets the night run
   camera.position.set(2.6,1.28,3.05);
   objective('Eat');
   say('You sit down with the box on your knees and eat in the dark.',4200);
   const lines=[
     ['It is still warm. That is the part you do not like.',4000],
-    ['The hallway is quiet. Every door out there is locked anyway.',9000],
-    ['Your eyes are open. You are almost sure your eyes are open.',15000]
+    ['Grandma\u2019s note says three knocks is practice. That was three knocks.',9000],
+    ['The hallway is quiet. Every door out there has been locked for years.',15000],
+    ['Your eyes are open. You are almost sure your eyes are open.',19000]
   ];
   lines.forEach(l=>setTimeout(()=>{ if(S.stage==='eating') say(l[0],4000); },l[1]));
-  setTimeout(()=>{ if(S.stage==='eating') fallAsleep(); },20000);
+  setTimeout(()=>{ if(S.stage==='eating') fallAsleep(); },24000);
 }
 function fallAsleep(){
   S.stage='sleep'; S.carrying=false;
@@ -1121,18 +1339,25 @@ function fallAsleep(){
   say('');
   setTimeout(()=>{
     /* wake at 5:00 AM in the dark */
-    S.minutes=300; S.sitting=false;
+    S.minutes=S.practice?0:WAKE; S.sitting=false;
     S.battery=100; S.flashOn=false; $('fl').textContent='OFF';
-    camera.position.set(2.6,1.55,2.4);
+    camera.position.set(2.6,1.55,2.3);
     powerCut();
-    S.stage='night'; S.round=0; S.roundWait=9; S.hideWindow=0; S.hiddenFor=0; S.safe=false;
+    S.stage=S.practice?'dawn':'night'; S.round=0; S.roundWait=9; S.hideWindow=0; S.hiddenFor=0; S.safe=false;
     $('fade').style.opacity=0;
-    objective('5:00 AM - use the flashlight. Hide on every knock.');
-    say('5:00 AM. The power is out and you did not turn anything off.',5200);
+    if(S.practice){
+      objective('PRACTICE - the power is out. Open the front door when you want to finish.');
+      say('Practice mode: the lights went out and nothing came with them.',5200);
+      SFX.creak();
+      return;
+    }
+    objective('5:00 AM - flashlight on. Get in the cupboard on every knock. 5 to go.');
+    say('5:00 AM. The power is out. The front door is open two inches.',5200);
     SFX.creak();
   },3400);
 }
 function powerCut(){
+  S.power=false;
   S.hallLightOn=false; S.tvOn=false;
   ambient.intensity=0.12; hemi.intensity=0.14;
   bulb.intensity=0; counterLight.intensity=0; hallGlow.intensity=0.25;
@@ -1142,6 +1367,7 @@ function powerCut(){
   if(A.humGain) A.humGain.gain.value=0;
 }
 function powerBack(){
+  S.power=true;
   ambient.intensity=0.85; hemi.intensity=0.8;
   bulb.intensity=14; counterLight.intensity=6; hallGlow.intensity=2.2;
   moon.intensity=1.1; glassBulb.material.emissiveIntensity=2.4;
@@ -1162,7 +1388,7 @@ function momArrives(){
 
 /* one hide round: knock, 5 s to get in, 6 s to stay in */
 function updateScript(dt){
-  if(S.mode!=='play'||S.overlay) return;
+  if(S.mode!=='play'||S.overlay||S.practice) return;
 
   if(S.stage==='night'){
     if(S.hideWindow<=0 && !S.safe){
@@ -1171,7 +1397,7 @@ function updateScript(dt){
         S.round++;
         S.hideWindow=6; S.hiddenFor=0;
         SFX.knock(); SFX.whisper();
-        say('A knock from the hallway. Six seconds to get in the cupboard. ('+S.round+' of '+S.ROUNDS+')',4600);
+        say(ROUND_LINES[Math.min(S.round,ROUND_LINES.length)-1]+' ('+S.round+' of '+S.ROUNDS+')',4800);
       }
     } else if(S.hideWindow>0){
       S.hideWindow-=dt;
@@ -1192,16 +1418,17 @@ function updateScript(dt){
       if(S.hiddenFor>=6){
         S.safe=false; S.hiddenFor=0; $('timer').style.display='none';
         SFX.creak();
-        S.minutes=Math.min(354,300+S.round*11);
+        S.minutes=Math.min(DAWN-6,WAKE+S.round*11);
         if(S.round>=S.ROUNDS){
-          S.stage='dawn'; S.minutes=360;
+          S.stage='dawn'; S.minutes=DAWN;
           objective('6:00 AM - let Mom in');
-          say('Footsteps go away down the hall. Then a key. A real key.',5200);
+          say(ROUND_AFTER[ROUND_AFTER.length-1],5200);
           setTimeout(()=>{ if(S.stage==='dawn'){ S.knockShake=1; SFX.knock();
-            say('Mom knocks. "Leo? It is six, baby. Open up."',6000); } },2600);
+            say('Mom knocks. "Leo? It is six, baby. Open up." She uses her key first.',6000); } },2600);
         } else {
           S.roundWait=7+Math.random()*5;
-          say('It leaves. Six seconds was enough. Come out.',3800);
+          objective((S.ROUNDS-S.round)+' more to go. Stay near the cupboard.');
+          say(ROUND_AFTER[Math.min(S.round,ROUND_AFTER.length)-1],4200);
         }
       }
     }
@@ -1257,6 +1484,12 @@ const WALK=2.7, RUN=4.4, RAD=0.36;
 const fwd=new THREE.Vector3(), rightV=new THREE.Vector3(), UP=new THREE.Vector3(0,1,0);
 let bob=0, breathe=0, swayX=0, swayY=0;
 
+/* furniture collision: reject a candidate spot only if we are not already stuck in it */
+function solid(x,z){
+  for(const b of BLOCKERS)
+    if(Math.abs(x-b.x)<b.hw+RAD && Math.abs(z-b.z)<b.hd+RAD) return true;
+  return false;
+}
 function move(dt){
   if(S.mode!=='play'||S.overlay||S.hiding||S.sitting){ return; }
   let f=0,s=0;
@@ -1273,6 +1506,7 @@ function move(dt){
   breathe+=dt;
 
   if(f||s){
+    const startX=p.x, startZ=p.z;
     camera.getWorldDirection(fwd); fwd.y=0; fwd.normalize();
     rightV.copy(fwd).cross(UP).normalize();
     const spd=(running?RUN:WALK)*Math.min(1,Math.hypot(f,s));
@@ -1292,6 +1526,14 @@ function move(dt){
       const throughDoor = Math.abs(nx) < HALL_HALF-RAD;
       p.x = THREE.MathUtils.clamp(nx, -ROOM.w/2+RAD, ROOM.w/2-RAD);
       p.z = THREE.MathUtils.clamp(nz, throughDoor ? HALL_END+RAD : THRESH+RAD, ROOM.d/2-RAD);
+    }
+
+    /* slide along furniture instead of walking through it */
+    if(!solid(startX,startZ)){
+      const wantX=p.x, wantZ=p.z;
+      if(solid(wantX,startZ)) p.x=startX;
+      if(solid(p.x,wantZ))    p.z=startZ;
+      if(solid(p.x,p.z)){ p.x=startX; p.z=startZ; }
     }
 
     const prevStep=Math.floor(bob/Math.PI);
@@ -1314,16 +1556,22 @@ function animateFlashlight(dt){
 /* =========================================================
    13. NERVE / ENDINGS
 ========================================================= */
-function nerveHit(a,msg){ S.nerve=Math.max(0,S.nerve-a); if(msg) say(msg,4600);
+function nerveHit(a,msg){ if(S.practice){ if(msg) say(msg,4600); return; }
+  S.nerve=Math.max(0,S.nerve-a); if(msg) say(msg,4600);
   vFlash(); SFX.hit(); if(S.nerve<=0) gameOver('Your nerve broke. It heard you panicking.'); }
 function gameOver(why){
+  if(S.practice){ say('PRACTICE: '+why+' (nothing happens here)',5000); return; }
   if(S.mode==='dead'||S.mode==='won') return;
   S.mode='dead';
   S.hiding=false; S.sitting=false;
   document.body.classList.remove('hiding');
-  entity.visible=true; entityEyes.intensity=6;
-  entity.position.set(camera.position.x,0,camera.position.z-1.5);
-  entity.lookAt(camera.position.x,1.4,camera.position.z);
+  /* jumpscare: it is suddenly in your face, whatever you were looking at */
+  entity.visible=true; entityEyes.intensity=7;
+  camera.getWorldDirection(lookDir);
+  entity.position.set(camera.position.x+lookDir.x*1.15, 0, camera.position.z+lookDir.z*1.15);
+  entity.lookAt(camera.position.x,2.4,camera.position.z);
+  head.userData.tilt=0.5; head.rotation.z=0.5;
+  camera.lookAt(entity.position.x, 2.35, entity.position.z);
   vFlash(); SFX.hit(); SFX.whisper();
   $('vblood').style.opacity=1;
   $('overWhy').textContent=why;
@@ -1350,21 +1598,25 @@ function winGame(){
 /* =========================================================
    14. NIGHT EVENTS
 ========================================================= */
+/* atmosphere only - the dangerous beats are all scripted in section 11b */
 function spawnEvent(){
+  S.nextEvent=20+Math.random()*18;
+  if(S.practice) return;
   const r=Math.random();
-  if(r<0.3){ S.calling=true; SFX.ring();
-    say('The phone rings. Nobody has this number but Mom.',4800);
-    setTimeout(()=>{ if(S.calling){ S.calling=false; say('The ringing stops by itself.'); } },12000);
-  } else if(r<0.58){ S.knocking=true; S.knockShake=1; SFX.knock();
-    say('Three slow knocks. "Leo? It is Mom. Let me in, sweetheart."',5400);
-    setTimeout(()=>{ S.knocking=false; },14000);
-  } else if(r<0.8){ S.calling=true; SFX.whisper();
-    say('Your own name, from the kitchen, in your own voice. HIDE.',5200);
-    setTimeout(()=>{ if(S.calling&&!S.hiding&&S.mode==='play')
-      gameOver('You did not hide when it called your name. Rule 3.'); S.calling=false; },9000);
-  } else { S.hallLightOn=true; SFX.flip();
-    say('The hallway light turns itself on. Do not look.',4800); }
-  S.nextEvent=18+Math.random()*16;
+  if(r<0.22){ SFX.creak(); say('A floorboard settles somewhere down the hallway.',3200); }
+  else if(r<0.42){ SFX.whisper(); say('Two voices behind 4D, talking about you in the past tense.',4200); }
+  else if(r<0.58){ SFX.ring();
+    S.calling=true;
+    say('The phone rings twice and stops. Nobody has this number but Mom.',4200);
+    setTimeout(()=>{ S.calling=false; },9000);
+  }
+  else if(r<0.74 && S.power){ S.hallLightOn=true; SFX.flip();
+    say('The hallway light turns itself on. Rule 1: do not look down the hallway.',4600); }
+  else if(r<0.88 && A.humGain){ A.humGain.gain.value=0;
+    say('The fridge stops humming. The quiet has a shape.',3600);
+    setTimeout(()=>{ if(A.humGain&&S.power) A.humGain.gain.value=0.05; },5000);
+  }
+  else { sfxNoise(0.5,220,0.22,'lowpass'); say('Something drags once across the hallway floor.',3600); }
 }
 
 /* =========================================================
@@ -1373,10 +1625,19 @@ function spawnEvent(){
 const lookDir=new THREE.Vector3();
 function updateMeters(dt){
   if(S.mode!=='play'||S.overlay) return;
-  S.minutes=Math.min(360,S.minutes+dt*MIN_PER_SEC);
-  const h=Math.floor(S.minutes/60), m=Math.floor(S.minutes%60);
-  $('clock').textContent=((h%12===0)?12:h%12)+':'+String(m).padStart(2,'0')+' AM';
-  if(S.minutes>=360){ $('clock').textContent='6:00 AM'; }
+  /* the clock only runs while the story lets it: it stops at 11:04 until the
+     rules are read, then 2 minutes later until the food is eaten on the couch.
+     In practice mode it never moves at all. */
+  if(!S.practice && (S.timeCap===null || S.minutes<S.timeCap))
+    S.minutes=Math.min(DAWN, S.minutes+dt*MIN_PER_SEC);
+  if(S.timeCap!==null) S.minutes=Math.min(S.minutes,S.timeCap);
+  const frozen = S.practice || (S.timeCap!==null && S.minutes>=S.timeCap);
+  $('clock').textContent=clockText(S.minutes)+(frozen?'  \u23F8':'');
+  /* ambient events, only while the flat is still "normal" */
+  if(!S.practice && (S.stage==='intro'||S.stage==='delivery'||S.stage==='pickup'||S.stage==='couch')){
+    S.nextEvent-=dt;
+    if(S.nextEvent<=0) spawnEvent();
+  }
   if(S.flashOn){
     S.battery=Math.max(0,S.battery-dt*(S.stage==='night'?1.05:2.0));
     if(S.battery<=0){ S.flashOn=false; $('fl').textContent='DEAD'; say('The flashlight dies.'); }
@@ -1388,24 +1649,47 @@ function updateMeters(dt){
   if(S.nerve<50 && A.ctx && Math.random()<dt*(2.4-S.nerve/50)) sfxTone(58,0.24,'sine',0.22);
 }
 function updateEntity(dt,t){
+  /* practice mode: it never comes, not even when the hallway light is on */
+  if(S.practice){
+    entity.visible=false; entityEyes.intensity=0;
+    entity.position.set(0,0,-13);
+    S.nerve=100;
+    return;
+  }
   /* scripted night: it walks in from the hallway on every knock */
+  /* --- scripted night: it comes up the hall, ducks in, and hunts the room --- */
   if(S.stage==='night'&&(S.hideWindow>0||S.safe)){
     entity.visible=!S.hiding;
-    entityEyes.intensity=entity.visible?2.4:0;
-    const target = S.safe ? 1.5 : -2.0;
-    entity.position.z += (target-entity.position.z)*dt*0.9;
-    entity.position.x += ((S.safe?3.2:0)-entity.position.x)*dt*0.9;
-    entity.lookAt(camera.position.x,1.9,camera.position.z);
+    entityEyes.intensity=entity.visible?2.2+Math.sin(t*11)*1.1:0;
+    if(S.safe){
+      /* you are in the cupboard: it circles the kitchen, then drifts out */
+      const ang=t*0.5;
+      entity.position.x += ((3.0+Math.sin(ang)*1.1)-entity.position.x)*dt*1.4;
+      entity.position.z += ((0.6+Math.cos(ang)*1.4)-entity.position.z)*dt*1.4;
+      entity.lookAt(closet.position.x,2.2,closet.position.z);
+      if(Math.random()<dt*0.7) sfxNoise(0.14,260,0.13,'lowpass');   // slow footfalls
+    } else {
+      /* the hide window: it walks straight at you, arriving as the timer hits 0 */
+      const k=1-Math.max(0,S.hideWindow)/6;                        // 0 -> 1
+      entity.position.x += ((camera.position.x)-entity.position.x)*dt*1.6;
+      entity.position.z = -5.2 + k*(camera.position.z+5.2);
+      entity.lookAt(camera.position.x,1.9,camera.position.z);
+      entity.rotation.z=Math.sin(t*7)*0.03*k;                      // lurching
+      if(Math.random()<dt*(2+k*4)) sfxNoise(0.12,220+Math.random()*160,0.16,'lowpass');
+    }
     animateEntity(t,true);
     return;
   }
+  entity.rotation.z=0;
   if(S.stage==='night'||S.stage==='dawn'||S.stage==='credits'){
     entity.visible=false; entityEyes.intensity=0;
     entity.position.set(0,0,-13);
     return;
   }
+  /* --- before the sleep: it only exists in the lit hallway, and only moves
+         while you are looking straight down it --- */
   entity.visible = S.hallLightOn && !S.hiding && S.mode==='play';
-  entityEyes.intensity = entity.visible?1.4+Math.sin(t*3)*0.6:0;
+  entityEyes.intensity = entity.visible?1.2+Math.sin(t*3)*0.6:0;
   if(S.mode!=='play') return;
   let walking=false;
   if(entity.visible){
@@ -1414,13 +1698,16 @@ function updateEntity(dt,t){
     const staring = lookDir.z<-0.55 && camera.position.z<2.0;
     if(staring){
       walking=true;
-      entity.position.z += dt*1.35;                 // it closes in
+      entity.position.z += dt*1.5;                  // it closes in while watched
+      entity.position.x += (0-entity.position.x)*dt*2;
       S.nerve=Math.max(0,S.nerve-dt*15);
       if(Math.random()<dt*1.5) SFX.whisper();
+      if(entity.position.z>-9&&Math.random()<dt*0.6)
+        say('It has not moved its feet. It is just closer.',2600);
       if(S.nerve<=0||entity.position.z>-6.0)
-        gameOver('You looked. It learned that you can see it. Rules 1 and 5.');
+        gameOver('You looked, and you kept looking. It learned that you can see it. Rules 1 and 5.');
     } else {
-      entity.position.z = Math.max(-13, entity.position.z - dt*0.6);
+      entity.position.z = Math.max(-16, entity.position.z - dt*0.9);
       S.nerve=Math.min(100,S.nerve+dt*3.2);
     }
   } else S.nerve=Math.min(100,S.nerve+dt*3.6);
@@ -1461,15 +1748,34 @@ function animateProps(dt,t){
     pos.setZ(i, Math.sin(t*1.6+bx*1.7+by*0.6)*0.06*(1-Math.abs(by)/0.9));
   }
   pos.needsUpdate=true;
-  /* lights + TV */
-  bulb.intensity = 14+Math.sin(t*8.7)*0.6+(Math.random()<0.008?-6:0);
-  glassBulb.material.emissiveIntensity = 2.2+Math.sin(t*8.7)*0.3;
-  hallLight.intensity += ((S.hallLightOn?22:0)-hallLight.intensity)*dt*6;
-  hallGlow.intensity = 2.2+Math.sin(t*1.6)*0.4;
-  if(S.tvOn){ drawStatic(); M.screen.emissiveIntensity=1.1+Math.random()*0.5;
+  /* lights + TV  (all of it dies with the power) */
+  if(S.power){
+    bulb.intensity = 14+Math.sin(t*8.7)*0.6+(Math.random()<0.008?-6:0);
+    glassBulb.material.emissiveIntensity = 2.2+Math.sin(t*8.7)*0.3;
+    hallLight.intensity += ((S.hallLightOn?22:0)-hallLight.intensity)*dt*6;
+    hallGlow.intensity = 2.2+Math.sin(t*1.6)*0.4;
+  } else {
+    bulb.intensity = 0; glassBulb.material.emissiveIntensity = 0;
+    hallLight.intensity += (0-hallLight.intensity)*dt*8;
+    hallGlow.intensity = 0.22+Math.sin(t*0.9)*0.05;
+  }
+  /* caged hallway lamps buzz and drop out one at a time */
+  hallLamps.forEach((L,i)=>{
+    L.flick-=dt;
+    if(L.flick<=0) L.flick=0.6+Math.random()*4.5;
+    const on = S.power && S.hallLightOn && L.flick>0.12;
+    const v = on ? 4.5+Math.sin(t*30+i)*1.6 : 0;
+    L.light.intensity += (v-L.light.intensity)*dt*14;
+    L.glass.material.emissiveIntensity = on ? 1.6 : 0;
+  });
+  /* the wall clock reads the same time as the HUD */
+  const tm=(23*60+S.minutes);
+  handMPivot.rotation.z = -(tm%60)/60*Math.PI*2;
+  handHPivot.rotation.z = -((tm%720)/720)*Math.PI*2;
+  if(S.tvOn&&S.power){ drawStatic(); M.screen.emissiveIntensity=1.1+Math.random()*0.5;
     tvLight.intensity=7+Math.random()*3; }
   else { M.screen.emissiveIntensity=0; tvLight.intensity=0; }
-  scene.fog.density = 0.045 + Math.max(0,(45-S.nerve))*0.0012;
+  scene.fog.density = (S.power?0.03:0.072) + Math.max(0,(45-S.nerve))*0.0012;
 }
 /* animated fly-around behind the main menu */
 function menuCamera(t){
