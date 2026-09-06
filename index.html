@@ -103,6 +103,14 @@ body.playing .hud,body.playing #cross{display:block}
 #hudL{left:16px;bottom:14px;line-height:1.8}
 #hudR{right:16px;bottom:14px;text-align:right;line-height:1.8}
 #obj{left:50%;top:16px;transform:translateX(-50%)}
+.hands{position:fixed;z-index:5;pointer-events:none;bottom:8%;display:none}
+body.playing .hands.show{display:block}
+#handL{left:4%}
+#handR{right:4%}
+.plate{width:90px;height:70px;border-radius:50%;border:3px solid #c8b89a;background:radial-gradient(ellipse at 50% 55%,#f5e6c8 0%,#d4c4a0 60%,#b8a882 100%);box-shadow:0 4px 14px rgba(0,0,0,.5),inset 0 -6px 12px rgba(0,0,0,.15);position:relative}
+.plate::after{content:'';position:absolute;top:12%;left:18%;width:64%;height:60%;border-radius:50%;border:1px solid rgba(0,0,0,.08);background:radial-gradient(ellipse,#e8d8b4 0%,#d0c098 100%)}
+.food-on-plate{position:absolute;top:20%;left:22%;width:56%;height:44%;border-radius:40% 40% 50% 50%;background:radial-gradient(ellipse at 50% 40%,#d4a050 0%,#b8823c 50%,#8a5e2a 100%);box-shadow:inset 0 -4px 6px rgba(0,0,0,.2)}
+.food-on-plate::before{content:'';position:absolute;top:15%;left:25%;width:50%;height:35%;border-radius:50%;background:rgba(180,120,50,.5)}
 #obj b{color:#9fd0b0}
 #tasks{position:fixed;z-index:6;left:16px;top:16px;display:none;font-size:12px;
   letter-spacing:1px;line-height:1.9;text-shadow:0 0 5px #000;pointer-events:none;
@@ -247,6 +255,8 @@ body.touch.playing #touch{display:block}
 <div id="vblood"></div>
 <div id="vflash"></div>
 <div id="cross"></div>
+<div class="hands" id="handL"><div class="plate"><div class="food-on-plate"></div></div></div>
+<div class="hands" id="handR"><div class="plate"><div class="food-on-plate"></div></div></div>
 
 <div class="hud" id="obj">OBJECTIVE: <b id="objText">Read the rules on the fridge</b></div>
 <div id="tasks"><h4>BEFORE YOU SLEEP</h4><div id="taskList"></div></div>
@@ -697,7 +707,8 @@ magnet.rotation.x=Math.PI/2; fridgeHinge.add(magnet);
 const fridgeInner=new THREE.PointLight(0xdfeaff,0,2.6,2); fridgeInner.position.set(0,1.1,0.2);
 fridge.add(fridgeInner);
 scene.add(fridge);
-fridge.traverse(o=>{ if(o.isMesh) tag(o,'rules','Press [E] to Read Rules'); });
+fridge.traverse(o=>{ if(o.isMesh && o!==fNote) tag(o,'fridge','Press [E] to Open the Fridge'); });
+tag(fNote,'rules','Press [E] to Read the Note');
 
 /* ---- FRONT DOOR: the flat's only way out, opens onto the communal hallway ---- */
 box(1.1,2.3,0.2,M.wall,-0.85,1.15,-ROOM.d/2);            /* fixed half of the doorway */
@@ -777,6 +788,7 @@ const pizzaTex=canvasTex(128,128,(c,w,h)=>{
 foodBox.add(mesh(B(0.62,0.09,0.62),std({map:pizzaTex,roughness:.9}),0,0.06,0));
 foodBox.add(mesh(B(0.3,0.14,0.22),std({color:0xb9432f,roughness:.7}),0.42,0.08,0.1));
 foodBox.visible=false; scene.add(foodBox);
+foodBox.traverse(o=>{ if(o.isMesh) tag(o,'food','Press [E] to Take the Pizza'); });
 
 /* ---- HALLWAY DOORS: all locked ---- */
 const hallDoors=[];
@@ -1230,6 +1242,8 @@ function labelFor(o){
     case 'sink':   return S.plateDirty?'Press [E] to Rinse the Plate':'Press [E] to Run the Tap';
     case 'curtain':return S.curtainOpen?'Press [E] to Close the Curtain':'Press [E] to Open the Curtain';
     case 'bolt':   return S.bolted?'Press [E] to Unlock the Deadbolt':'Press [E] to Turn the Deadbolt';
+    case 'fridge': return 'Press [E] to Open the Fridge';
+    case 'food':   return 'Press [E] to Take the Pizza';
     case 'door':   return S.stage==='dawn'?'Press [E] to Let Mom In'
                      :(S.frontOpen?'Press [E] to Shut the Front Door':'Press [E] to Open the Front Door');
     default:       return o.userData.label;
@@ -1272,8 +1286,7 @@ const CHORES=[
   {k:'plate',  t:'Rinse the plate in the sink'},
   {k:'curtain',t:'Close the curtain'},
   {k:'tv',     t:'Switch the TV off'},
-  {k:'hall',   t:'Turn the hallway light off'},
-  {k:'bolt',   t:'Turn the deadbolt on the front door'}
+  {k:'hall',   t:'Turn the hallway light off'}
 ];
 function choresLeft(){ return CHORES.filter(c=>!S.chores[c.k]).length; }
 function renderChores(){
@@ -1313,9 +1326,15 @@ function interact(){
   if(!focus) return;
   const hour=gameHour();
   switch(focus.userData.action){
-    case 'rules':
+    case 'fridge':
       if(S.stage==='getfood'){ S.fridgeOpen=true; setTimeout(()=>{ S.fridgeOpen=false; },2600);
         SFX.doorOpen(); takeMeal(); break; }
+      if(S.carrying){ say('Your hands are full.'); break; }
+      S.fridgeOpen=!S.fridgeOpen; SFX.doorOpen();
+      say(S.fridgeOpen?'The fridge hums. Cold air rolls out over your feet.':'You close the fridge.',4200);
+      if(S.fridgeOpen) setTimeout(()=>{ S.fridgeOpen=false; },2600);
+      break;
+    case 'rules':
       if(S.readRules && S.fridgeHourUsed===hour && S.stage!=='intro')
         nerveHit(14,'You opened the fridge twice in the same hour. Rule 4.');
       S.fridgeHourUsed=hour;
@@ -1395,8 +1414,8 @@ function interact(){
     case 'bolt':
       if(S.frontOpen){ say('Shut the door before you try the bolt.'); break; }
       S.bolted=!S.bolted; SFX.click();
-      if(S.bolted) markChore('bolt','The deadbolt goes over with a sound the whole floor can hear.');
-      else { if(S.stage==='chores'){ S.chores.bolt=false; renderChores(); }
+      if(S.bolted) say('The deadbolt goes over with a sound the whole floor can hear.');
+      else { say('You slide the bolt back. That feels like a mistake.');
         say('You slide the bolt back. That feels like a mistake.'); }
       break;
     case 'letter':
@@ -1448,8 +1467,7 @@ function interact(){
         break;
       }
       S.frontOpen=!S.frontOpen; SFX.doorOpen();
-      if(S.frontOpen&&S.bolted){ S.bolted=false;
-        if(S.stage==='chores'){ S.chores.bolt=false; renderChores(); } }
+      if(S.frontOpen&&S.bolted){ S.bolted=false; }
       say(S.frontOpen?'The door swings into the hallway. Four dead doors and a light that is not on.'
                      :'You shut the door and turn the deadbolt.',4200);
       break;
@@ -2254,6 +2272,7 @@ function animate(){
   updateEntity(dt,t);
   animateProps(dt,t);
   if(A.humGain) A.humGain.gain.value = 0.05/(1+camera.position.distanceTo(fridge.position)*0.25);
+  document.querySelectorAll('.hands').forEach(h=>h.classList.toggle('show',S.carrying&&S.mode==='play'&&!S.sitting));
   renderer.render(scene,camera);
 }
 resize();
