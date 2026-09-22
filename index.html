@@ -93,6 +93,11 @@
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="theme-color" content="#000000" />
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20rx='12'%20fill='%230a0a0f'/%3E%3Ccircle%20cx='32'%20cy='30'%20r='19'%20fill='%2314141c'/%3E%3Cellipse%20cx='24'%20cy='27'%20rx='3.4'%20ry='5.6'%20fill='%23ff2a12'/%3E%3Cellipse%20cx='40'%20cy='27'%20rx='3.4'%20ry='5.6'%20fill='%23ff2a12'/%3E%3Cpath%20d='M22%2044%20Q32%2039%2042%2044'%20stroke='%23ff2a12'%20stroke-width='2.4'%20fill='none'%20stroke-linecap='round'/%3E%3C/svg%3E" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Midnight Curfew" />
 <title>The Midnight Curfew</title>
 <style>
 /* ================= css/style.css ================= */
@@ -152,6 +157,29 @@ body.playing #tasks.on{display:block}
   transition:opacity .13s}
 #vblood{position:fixed;inset:0;z-index:5;pointer-events:none;opacity:0;transition:opacity .6s;
   background:radial-gradient(ellipse at center,rgba(0,0,0,0) 40%,rgba(120,10,10,.55) 100%)}
+/* ============ BOOT / ENGINE SPLASH ============ */
+#boot{position:fixed;inset:0;z-index:60;background:#05060a;display:flex;
+  flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity .8s ease;overflow:hidden}
+#boot.gone{opacity:0;pointer-events:none}
+#boot canvas#bootfx{position:absolute;inset:0;width:100%;height:100%;opacity:.6}
+#bootInner{position:relative;z-index:2;text-align:center;
+  transform:translateY(-4px)}
+.bootLogo{font-size:12px;letter-spacing:8px;color:#4de0c0;
+  animation:bootPulse 2.2s ease-in-out infinite}
+.bootTitle{margin-top:14px;font-size:clamp(30px,7vw,66px);font-weight:700;
+  letter-spacing:6px;line-height:1;color:#e9e2cf;
+  text-shadow:0 0 24px rgba(77,224,192,.25)}
+.bootTitle span{display:block;color:#b0574a;font-size:.62em;letter-spacing:12px;margin-top:6px}
+.bootBarWrap{margin:34px auto 10px;width:min(70vw,420px);height:4px;
+  background:rgba(255,255,255,.08);border:1px solid rgba(77,224,192,.3);overflow:hidden}
+.bootBar{height:100%;width:0%;background:linear-gradient(90deg,#4de0c0,#b0574a);
+  box-shadow:0 0 12px #4de0c0;transition:width .25s ease}
+.bootStatus{font-size:11px;letter-spacing:3px;color:#7c8aa0;min-height:16px}
+.bootHint{position:absolute;bottom:22px;left:0;right:0;text-align:center;
+  font-size:10px;letter-spacing:3px;color:#3d4658;z-index:2}
+@keyframes bootPulse{0%,100%{opacity:.4}50%{opacity:1}}
+@keyframes bootFlick{0%,97%,100%{opacity:1}98%{opacity:.5}}
 /* ============ MAIN MENU ============ */
 #menu{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;
   justify-content:center;padding:0 8vw;
@@ -269,6 +297,17 @@ body.touch.playing #touch{display:block}
 </style>
 </head>
 <body>
+<!-- ===== ENGINE BOOT SPLASH ===== -->
+<div id="boot">
+  <canvas id="bootfx"></canvas>
+  <div id="bootInner">
+    <div class="bootLogo">◆ OREATE ENGINE — KESSLER BUILD v4.1 ◆</div>
+    <div class="bootTitle">THE MIDNIGHT<span>CURFEW</span></div>
+    <div class="bootBarWrap"><div class="bootBar" id="bootBar"></div></div>
+    <div class="bootStatus" id="bootStatus">initializing renderer…</div>
+  </div>
+  <div class="bootHint" id="bootHint">loading</div>
+</div>
 <div id="game"></div>
 <div id="film"></div>
 <div id="vblood"></div>
@@ -311,14 +350,35 @@ body.touch.playing #touch{display:block}
   <nav>
     <button class="mi" id="btnStart">START NIGHT <small>11:00 PM &mdash; story mode</small></button>
     <button class="mi" id="btnPractice">PRACTICE MODE <small>nothing comes for you &middot; clock frozen</small></button>
+    <button class="mi" id="btnSkip">SKIP TO 5 AM <small>jump straight to the hide sequence</small></button>
+    <button class="mi" id="btnFreecam">CAMERA MODE <small>free-fly &middot; view the whole flat, no danger</small></button>
+    <button class="mi" id="btnNightmare">NIGHTMARE <small>it hunts faster &middot; nerve breaks sooner</small></button>
     <button class="mi" id="btnStory">STORY</button>
     <button class="mi" id="btnRules">THE FIVE RULES</button>
     <button class="mi" id="btnHow">HOW TO PLAY</button>
     <button class="mi" id="btnRetro">RETRO FILTER <small id="retroState">OFF</small></button>
+    <button class="mi" id="btnPerf">PERFORMANCE MODE <small id="perfState">OFF</small></button>
     <button class="mi" id="btnSound">SOUND <small id="soundState">ON</small></button>
+    <button class="mi" id="btnInstall" style="display:none">INSTALL GAME <small>add to your device</small></button>
   </nav>
+  <div id="settings" style="margin-top:14px;font:11px/1.6 monospace;letter-spacing:1px;color:#8fa0bd;text-align:left;max-width:360px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+      <span style="width:110px">LOOK SENSITIVITY</span>
+      <input id="optSens" type="range" min="0.3" max="2" step="0.1" value="1" style="flex:1">
+      <span id="optSensV" style="width:30px;text-align:right">1.0</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="width:110px">BRIGHTNESS</span>
+      <input id="optBright" type="range" min="0.6" max="1.6" step="0.05" value="1" style="flex:1">
+      <span id="optBrightV" style="width:30px;text-align:right">1.0</span>
+    </div>
+  </div>
+  <div id="discoveries" style="margin-top:14px;font:11px/1.7 monospace;letter-spacing:1px;color:#8fa0bd;text-align:left;max-width:360px">
+    <div style="color:#b0574a;margin-bottom:4px">ENDINGS DISCOVERED &mdash; <span id="endCount">0 / 6</span></div>
+    <div id="endList"></div>
+  </div>
   <div class="legal">A game by HUZAIFAA &middot; built with OreateAI<br>
-    Three.js r160 &middot; procedural audio &middot; no external assets</div>
+    Three.js r160 &middot; procedural audio &middot; particle rain &amp; dust &middot; no external assets</div>
   <div id="audioHint">click anywhere to enable ambient sound</div>
 </div>
 <!-- ===== PANELS ===== -->
@@ -373,7 +433,7 @@ body.touch.playing #touch{display:block}
     <li>The clock waits for the story: it stops at 11:04 PM until you read the rules, and again two minutes later until you eat on the couch.</li>
     <li>You cannot walk through furniture. The cupboard is the only safe place in the flat.</li>
     <li>NERVE drops while you break a rule and recovers when you behave. At zero, the night ends badly.</li>
-    <li>After 5:00 AM it knocks five times. Each time: get in the cupboard, stay in for six seconds.</li>
+    <li>After 5:00 AM it knocks four times. Each time: get in the cupboard, stay in for six seconds. After the fourth, hold on until 6:00 AM.</li>
     <li>Never open the front door before 6:00 AM. At 6:00 AM, open it.</li>
     <li>PRACTICE MODE: same flat, no monster, frozen clock, nothing can kill you.</li>
   </ol>
@@ -437,7 +497,7 @@ body.touch.playing #touch{display:block}
       <div class="val">Huzaifaa<br>with OreateAI</div></div>
     <div class="sec"><div class="lbl">AND FINALLY</div>
       <div class="val">Mom got home at 6:00 AM.<br>She read the list out loud again.<br>
-        There were five knocks last night.<br>Night 2 is tomorrow.</div></div>
+        There were four knocks last night.<br>Night 2 is tomorrow.</div></div>
   </div>
   <div class="end">PRESS [R] TO PLAY AGAIN</div>
 </div>
@@ -452,6 +512,88 @@ body.touch.playing #touch{display:block}
 <script>
   window.__gameBooted=false;
   setTimeout(function(){if(!window.__gameBooted)document.getElementById('loadfail').style.display='flex';},7000);
+
+  /* ===== ENGINE BOOT SPLASH: animated grid + progress bar ===== */
+  (function(){
+    var cv=document.getElementById('bootfx'), ctx=cv.getContext('2d');
+    function fit(){ cv.width=innerWidth; cv.height=innerHeight; }
+    fit(); addEventListener('resize',fit);
+    var t=0, raf;
+    function draw(){
+      t+=0.016;
+      ctx.clearRect(0,0,cv.width,cv.height);
+      /* perspective grid sweeping toward a vanishing point */
+      var cx=cv.width/2, hy=cv.height*0.62;
+      ctx.strokeStyle='rgba(77,224,192,0.18)'; ctx.lineWidth=1;
+      for(var i=-14;i<=14;i++){
+        ctx.beginPath(); ctx.moveTo(cx,hy);
+        ctx.lineTo(cx+i*cv.width*0.09, cv.height); ctx.stroke();
+      }
+      for(var j=1;j<16;j++){
+        var f=((j+ (t*3)%1)/16); var yy=hy+(cv.height-hy)*f*f;
+        ctx.globalAlpha=1-f*0.8;
+        ctx.beginPath(); ctx.moveTo(0,yy); ctx.lineTo(cv.width,yy); ctx.stroke();
+      }
+      ctx.globalAlpha=1;
+      /* scanline shimmer */
+      ctx.fillStyle='rgba(176,87,74,0.05)';
+      ctx.fillRect(0,(t*120)%cv.height,cv.width,2);
+      raf=requestAnimationFrame(draw);
+    }
+    draw();
+
+    var steps=[
+      'initializing renderer…',
+      'compiling procedural textures…',
+      'baking normal maps…',
+      'wiring WebAudio graph…',
+      'spawning dust & rain systems…',
+      'rigging the thing in the hallway…',
+      'reading the five rules…',
+      'ready.'
+    ];
+    var bar=document.getElementById('bootBar'),
+        st=document.getElementById('bootStatus'),
+        hint=document.getElementById('bootHint');
+    var p=0, si=0;
+    var iv=setInterval(function(){
+      p=Math.min(100, p + 8 + Math.random()*12);
+      bar.style.width=p+'%';
+      var idx=Math.min(steps.length-1, Math.floor(p/100*steps.length));
+      if(idx!==si){ si=idx; st.textContent=steps[idx]; }
+      if(p>=100){ clearInterval(iv); st.textContent='ready.'; }
+    },240);
+
+    /* dismiss when the game module has booted (or after a safety timeout) */
+    window.__dismissBoot=function(){
+      bar.style.width='100%'; st.textContent='ready.';
+      hint.textContent='CLICK / TAP TO ENTER';
+      var go=function(){
+        var b=document.getElementById('boot');
+        if(!b||b.classList.contains('gone')) return;
+        b.classList.add('gone');
+        setTimeout(function(){ cancelAnimationFrame(raf); if(b&&b.parentNode) b.parentNode.removeChild(b); },900);
+        removeEventListener('pointerdown',go); removeEventListener('keydown',go);
+      };
+      addEventListener('pointerdown',go,{once:true});
+      addEventListener('keydown',go,{once:true});
+      /* auto-enter after a short beat so it never blocks */
+      setTimeout(go,1600);
+    };
+  })();
+
+  /* ===== PWA: register the service worker so the game can be installed ===== */
+  if('serviceWorker' in navigator){
+    addEventListener('load',function(){
+      navigator.serviceWorker.register('sw.js').catch(function(){});
+    });
+  }
+  /* capture the install prompt for the in-menu INSTALL button */
+  window.__installEvt=null;
+  addEventListener('beforeinstallprompt',function(e){
+    e.preventDefault(); window.__installEvt=e;
+    var b=document.getElementById('btnInstall'); if(b) b.style.display='';
+  });
 </script>
 
 <script type="importmap">
@@ -491,20 +633,22 @@ $('game').appendChild(renderer.domElement);
 let composer=null, bloomPass=null, gradePass=null;
 
 let retro = false;
+let PERF = localStorage.getItem('mc_perf')==='1';   // low-cost mode for weaker laptops
 const QUALITY = IS_TOUCH ? 0.72 : 1;          // internal resolution scale on phones
+function prCap(){ return Math.min(devicePixelRatio||1, PERF?1:(IS_TOUCH?1.5:1.75)); }
 function resize(){
   if(retro){
     renderer.setPixelRatio(1);
     renderer.setSize(320,240,false);
     camera.aspect = 4/3;
   } else {
-    renderer.setPixelRatio(Math.min(devicePixelRatio, IS_TOUCH?1.5:2)*QUALITY);
+    renderer.setPixelRatio(prCap()*QUALITY);
     renderer.setSize(innerWidth,innerHeight,false);
     camera.aspect = innerWidth/innerHeight;
   }
   camera.updateProjectionMatrix();
   if(composer){
-    const pr=Math.min(devicePixelRatio, IS_TOUCH?1.5:2)*QUALITY;
+    const pr=prCap()*QUALITY;
     composer.setPixelRatio(pr);
     composer.setSize(innerWidth,innerHeight);
     if(gradePass) gradePass.uniforms.uRes.value.set(innerWidth,innerHeight);
@@ -764,7 +908,7 @@ const GradeShader = {
 };
 function buildComposer(){
   composer=new EffectComposer(renderer);
-  composer.setPixelRatio(Math.min(devicePixelRatio, IS_TOUCH?1.5:2)*QUALITY);
+  composer.setPixelRatio(prCap()*QUALITY);
   composer.setSize(innerWidth,innerHeight);
   composer.addPass(new RenderPass(scene,camera));
   bloomPass=new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),
@@ -815,8 +959,76 @@ box(2.8,0.2,14,M.hall,0,-0.1,-12,0,false);
 box(2.8,0.2,14,M.ceil,0,ROOM.h,-12,0,false);
 box(0.2,ROOM.h,14,M.hall,-1.4,ROOM.h/2,-12);
 box(0.2,ROOM.h,14,M.hall, 1.4,ROOM.h/2,-12);
-box(2.8,ROOM.h,0.2,M.hall,0,ROOM.h/2,-19);
 for(let z=-7; z>-18; z-=3.5) box(0.9,1.3,0.05,M.paper,-1.32,1.7,z,Math.PI/2,false);
+
+/* ---- STAIRWELL LANDING: the corridor opens into a tall two-storey well ---- */
+const LAND_HALF=3.6, LAND_Z=-18.6, LAND_END=-26.4, LAND_CY=-22.4;
+const UP_HALF=3.2, UP_END=-31.6, UP_CY=-29.0, UP_FLOOR=3.0, UP_H=6.0, UP_MOUTH=1.5;
+box(7.6,0.2,8.2,M.hall,0,-0.1,LAND_CY,0,false);            // landing floor
+/* low ceiling only over the corridor mouth; the stair well itself is double height */
+box(7.6,0.2,2.6,M.ceil,0,ROOM.h,LAND_Z-1.1,0,false);
+box(7.6,0.2,6.2,M.ceil,0,UP_H,-23.5,0,false);              // high ceiling over the well
+/* side walls run the full double height */
+box(0.2,UP_H,8.2,M.hall,-LAND_HALF-0.1,UP_H/2,LAND_CY);
+box(0.2,UP_H,8.2,M.hall, LAND_HALF+0.1,UP_H/2,LAND_CY);
+/* south wall of the landing, split around the corridor mouth */
+box(2.4,ROOM.h,0.2,M.hall,-2.5,ROOM.h/2,LAND_Z);
+box(2.4,ROOM.h,0.2,M.hall, 2.5,ROOM.h/2,LAND_Z);
+box(2.8,0.7,0.2,M.hall,0,ROOM.h-0.35,LAND_Z);              // lintel over the mouth
+/* north wall: solid below the upper floor (the back of the staircase) ... */
+box(7.6,UP_FLOOR,0.2,M.hall,0,UP_FLOOR/2,LAND_END);
+/* ... and split above it, leaving a doorway at the top of the stairs into the upper room */
+box(7.6/2-UP_MOUTH,UP_H-UP_FLOOR,0.2,M.hall,-(UP_MOUTH+(7.6/2-UP_MOUTH)/2),UP_FLOOR+(UP_H-UP_FLOOR)/2,LAND_END);
+box(7.6/2-UP_MOUTH,UP_H-UP_FLOOR,0.2,M.hall, (UP_MOUTH+(7.6/2-UP_MOUTH)/2),UP_FLOOR+(UP_H-UP_FLOOR)/2,LAND_END);
+box(7.6,0.16,0.06,M.wood,0,0.08,LAND_END+0.16,0,false);    // skirting
+
+/* ---- STAIRCASE climbing to the upper floor (top tread level with UP_FLOOR) ---- */
+const STEPS=12, stepRise=0.25, stepRun=0.31, stepW=3.0, stepZ0=-22.6;
+for(let i=0;i<STEPS;i++){
+  const y=0.125+i*stepRise, z=stepZ0-i*stepRun;
+  box(stepW,0.25,stepRun+0.02,M.wood,0,y,z,0,true);          // tread + riser
+}
+/* stringer walls either side of the stairs */
+box(0.14,3.4,3.8,M.wood,-stepW/2-0.06,1.55,-24.3,0,false);
+box(0.14,3.4,3.8,M.wood, stepW/2+0.06,1.55,-24.3,0,false);
+/* banister posts + rail down one side */
+for(let i=0;i<STEPS;i+=2){
+  const y=0.125+i*stepRise, z=stepZ0-i*stepRun;
+  box(0.06,0.78,0.06,M.wood,stepW/2-0.12,y+0.46,z,0,false);
+}
+
+/* ---- UPPER ROOM at the top of the stairs ---- */
+const UP_DEPTH=LAND_END-UP_END;                              // 5.2
+box(7.2,0.2,UP_DEPTH,M.hall,0,UP_FLOOR-0.1,UP_CY,0,false);   // upper floor slab
+box(7.2,0.2,UP_DEPTH,M.ceil,0,UP_H,UP_CY,0,false);           // upper ceiling
+box(0.2,UP_H-UP_FLOOR,UP_DEPTH,M.hall,-UP_HALF-0.1,(UP_FLOOR+UP_H)/2,UP_CY); // left
+box(0.2,UP_H-UP_FLOOR,UP_DEPTH,M.hall, UP_HALF+0.1,(UP_FLOOR+UP_H)/2,UP_CY); // right
+box(7.2,UP_H-UP_FLOOR,0.2,M.hall,0,(UP_FLOOR+UP_H)/2,UP_END);                 // far north wall
+box(7.2,0.16,0.06,M.wood,0,UP_FLOOR+0.08,UP_END+0.16,0,false);               // skirting
+/* Ada's shoes, still laced, pointing at the wall (lore payoff) */
+box(0.13,0.09,0.30,M.dark,-0.28,UP_FLOOR+0.05,UP_END+0.55,0,false);
+box(0.13,0.09,0.30,M.dark, 0.02,UP_FLOOR+0.05,UP_END+0.55,0,false);
+/* a dead child-sized bedframe against the side wall */
+box(1.9,0.12,0.95,M.wood,-1.9,UP_FLOOR+0.35,UP_CY,0,false);
+box(0.95,0.9,0.06,M.wood,-1.9,UP_FLOOR+0.55,UP_CY-0.42,0,false);
+
+/* dim, sickly upstairs light + the dark glow at the top of the stairs */
+const upLight=new THREE.PointLight(0x7a1f26,0,9,2);
+upLight.position.set(0,UP_FLOOR+2.0,UP_CY); scene.add(upLight);
+const stairVoid=new THREE.PointLight(0x140708,1.4,7,2);
+stairVoid.position.set(0,UP_FLOOR+0.4,LAND_END+0.3); scene.add(stairVoid);
+
+/* landing dressing: a flickering caged lamp registered with the hall lamps later */
+const LAND_LAMP=(()=>{
+  const g=new THREE.Group(); g.position.set(0,ROOM.h-0.18,LAND_CY+1.2); scene.add(g);
+  const glass=new THREE.Mesh(new THREE.SphereGeometry(0.11,10,8),
+    std({color:0xfff0d0,emissive:0xffe0a8,emissiveIntensity:0,roughness:.4}));
+  glass.position.set(0,-0.06,0); g.add(glass);
+  const cage=new THREE.Mesh(new THREE.TorusGeometry(0.15,0.012,6,12),M.metal);
+  cage.position.set(0,-0.06,0); g.add(cage);
+  const L=new THREE.PointLight(0xd8e6ff,0,7,2); L.position.set(0,-0.1,0); g.add(L);
+  return {light:L, glass:glass, flick:Math.random()*9};
+})();
 
 /* furniture */
 box(3.0,0.9,0.85,M.wood,-3.2,0.45,3.35);
@@ -1054,12 +1266,13 @@ const hallLamps=[];
   const L=new THREE.PointLight(0xd8e6ff,0,7,2); L.position.set(0,-0.1,0); g.add(L);
   hallLamps.push({light:L, glass:g.children[0], flick:Math.random()*9});
 });
+hallLamps.push(LAND_LAMP);
 box(2.2,0.02,12,std({map:rugTex,roughness:1}),0,0.012,-12,0,false);
-box(0.9,0.06,0.4,M.wood,0,0.78,-18.6,0,false);
-for(const x of [-0.4,0.4]) box(0.06,0.78,0.06,M.wood,x,0.39,-18.6,0,false);
-tag(box(0.16,0.3,0.16,std({color:0x3e4a52,roughness:.6}),0,0.95,-18.6,0,false),
+box(0.9,0.06,0.4,M.wood,2.7,0.78,-24.5,0,false);
+for(const x of [2.3,3.1]) box(0.06,0.78,0.06,M.wood,x,0.39,-24.5,0,false);
+tag(box(0.16,0.3,0.16,std({color:0x3e4a52,roughness:.6}),2.7,0.95,-24.5,0,false),
     'vase','Press [E] to Look at the Vase');
-blk(0,-18.6,0.5,0.25);
+blk(2.7,-24.5,0.5,0.25);
 
 /* --- door numbers on the locked hallway doors --- */
 const numTex=t=>canvasTex(64,64,(c,w,h)=>{
@@ -1072,6 +1285,26 @@ const numTex=t=>canvasTex(64,64,(c,w,h)=>{
   const plate=mesh(B(0.16,0.16,0.02),std({map:numTex(n),roughness:.9}),-0.36,1.62,0.06);
   d.group.add(plate);
 });
+
+/* --- JUMPSCARE: a pale thing waits at the top of the stairwell --- */
+const scare=new THREE.Group();
+scare.position.set(0,UP_FLOOR+1.5,LAND_END-0.3); scare.visible=false; scene.add(scare);
+const scareHead=mesh(new THREE.SphereGeometry(0.55,18,16),
+  std({color:0xd9d2c2,roughness:.85,emissive:0x120404,emissiveIntensity:.4}),0,0,0);
+scareHead.scale.set(0.92,1.18,0.9); scare.add(scareHead);
+scare.add(mesh(new THREE.SphereGeometry(0.14,10,8),M.dark,-0.2,0.1,0.44));   // eye socket L
+scare.add(mesh(new THREE.SphereGeometry(0.14,10,8),M.dark, 0.2,0.1,0.44));   // eye socket R
+scare.add(mesh(new THREE.SphereGeometry(0.07,8,6),
+  std({color:0xff3018,emissive:0xff2a10,emissiveIntensity:3,roughness:.4}),-0.2,0.1,0.52)); // pupil L
+scare.add(mesh(new THREE.SphereGeometry(0.07,8,6),
+  std({color:0xff3018,emissive:0xff2a10,emissiveIntensity:3,roughness:.4}), 0.2,0.1,0.52)); // pupil R
+scare.add(mesh(B(0.42,0.34,0.12),M.dark,0,-0.32,0.46));                      // gaping mouth
+for(let i=0;i<5;i++){                                                        // teeth
+  scare.add(mesh(B(0.05,0.12,0.03),std({color:0xcfc7b2,roughness:.6}),-0.16+i*0.08,-0.24,0.53));
+}
+const scareLight=new THREE.PointLight(0xff2a12,0,6,2); scareLight.position.set(0,0.1,0.5);
+scare.add(scareLight);
+
 
 /* =========================================================
    6c. HOUSE DRESSING v4  -  a more lived-in flat
@@ -1100,7 +1333,7 @@ const kettle=new THREE.Group(); kettle.position.set(-2.35,0.93,3.45); scene.add(
 kettle.add(mesh(new THREE.CylinderGeometry(0.11,0.13,0.2,14),M.metal,0,0.1,0));
 kettle.add(mesh(new THREE.TorusGeometry(0.08,0.012,6,10),M.metal,0,0.24,0));
 for(let i=0;i<3;i++){ const mug=box(0.09,0.09,0.09,std({color:[0x8a4a3a,0x3a5a6a,0xece6d2][i],roughness:.6}),
-    -3.6+i*0.2,1.72,3.9,0,false); }
+    -3.9+i*0.22,1.76,4.44,0,false); }
 
 /* --- floor lamp by the couch (dim warm glow) --- */
 const lamp=new THREE.Group(); lamp.position.set(3.9,0,3.4); scene.add(lamp);
@@ -1130,6 +1363,92 @@ box(0.24,0.32,0.02,std({map:frameTex,roughness:.9}),0.9,0.06,-13.4,0.4,false); /
 /* --- doormat + keys dish by the front door --- */
 box(0.9,0.02,0.5,std({color:0x3a352c,roughness:1}),0.4,0.02,-4.2,0,false);
 box(0.16,0.04,0.16,std({color:0x6a6458,roughness:.4,metalness:.3}),0.9,0.04,-4.2,0,false);
+
+/* =========================================================
+   6d. ATMOSPHERE PARTICLES  (Three.js Points systems)
+   - floating dust motes drifting through the flat
+   - rain streaking down the kitchen window
+   - occasional lightning flash + delayed thunder
+========================================================= */
+const dotSprite = canvasTex(32,32,(c,w,h)=>{
+  const g=c.createRadialGradient(w/2,h/2,0,w/2,h/2,w/2);
+  g.addColorStop(0,'rgba(255,255,255,1)');
+  g.addColorStop(0.4,'rgba(255,255,255,0.5)');
+  g.addColorStop(1,'rgba(255,255,255,0)');
+  c.fillStyle=g; c.fillRect(0,0,w,h);
+});
+
+/* --- dust motes (they catch the flashlight beautifully) --- */
+const DUST_N=280;
+const dustGeo=new THREE.BufferGeometry();
+const dustPos=new Float32Array(DUST_N*3);
+const dustVel=new Float32Array(DUST_N*3);
+for(let i=0;i<DUST_N;i++){
+  dustPos[i*3]  =(Math.random()-0.5)*(ROOM.w-0.6);
+  dustPos[i*3+1]=0.15+Math.random()*(ROOM.h-0.35);
+  dustPos[i*3+2]=-19+Math.random()*(ROOM.d/2+19);
+  dustVel[i*3]  =(Math.random()-0.5)*0.05;
+  dustVel[i*3+1]=(Math.random()-0.5)*0.03;
+  dustVel[i*3+2]=(Math.random()-0.5)*0.05;
+}
+dustGeo.setAttribute('position',new THREE.BufferAttribute(dustPos,3));
+const dust=new THREE.Points(dustGeo,new THREE.PointsMaterial({
+  size:0.035, map:dotSprite, color:0xcdddff, transparent:true, opacity:0.45,
+  depthWrite:false, blending:THREE.AdditiveBlending, sizeAttenuation:true }));
+scene.add(dust);
+
+/* --- rain on the window glass (room side, so you can see it) --- */
+const RAIN_N=220;
+const rainGeo=new THREE.BufferGeometry();
+const rainPos=new Float32Array(RAIN_N*3);
+const RAIN_X=ROOM.w/2-0.30;
+for(let i=0;i<RAIN_N;i++){
+  rainPos[i*3]  =RAIN_X-Math.random()*0.06;
+  rainPos[i*3+1]=1.05+Math.random()*1.45;
+  rainPos[i*3+2]=-3.15+Math.random()*2.25;
+}
+rainGeo.setAttribute('position',new THREE.BufferAttribute(rainPos,3));
+const rain=new THREE.Points(rainGeo,new THREE.PointsMaterial({
+  size:0.05, map:dotSprite, color:0x9fb4d8, transparent:true, opacity:0.55,
+  depthWrite:false, blending:THREE.AdditiveBlending }));
+scene.add(rain);
+
+let lightning=0, thunderT=6+Math.random()*10;
+function updateAtmosphere(dt,t){
+  /* dust drift */
+  const dp=dustGeo.attributes.position.array;
+  for(let i=0;i<DUST_N;i++){
+    dp[i*3]  +=dustVel[i*3]  *dt + Math.sin(t*0.4+i)*0.0004;
+    dp[i*3+1]+=dustVel[i*3+1]*dt;
+    dp[i*3+2]+=dustVel[i*3+2]*dt;
+    if(dp[i*3+1]<0.1)  dp[i*3+1]=ROOM.h-0.3;
+    if(dp[i*3+1]>ROOM.h-0.2) dp[i*3+1]=0.15;
+    if(dp[i*3]<-ROOM.w/2+0.3) dp[i*3]=ROOM.w/2-0.3;
+    if(dp[i*3]> ROOM.w/2-0.3) dp[i*3]=-ROOM.w/2+0.3;
+  }
+  dustGeo.attributes.position.needsUpdate=true;
+  dust.material.opacity=(S.power?0.45:0.3);
+  /* rain fall (only visible while the curtain is open) */
+  rain.visible=S.curtainOpen;
+  if(rain.visible){
+    const rp=rainGeo.attributes.position.array;
+    for(let i=0;i<RAIN_N;i++){
+      rp[i*3+1]-=dt*(1.4+ (i%5)*0.25);
+      if(rp[i*3+1]<1.05){ rp[i*3+1]=2.5; rp[i*3+2]=-3.15+Math.random()*2.25; }
+    }
+    rainGeo.attributes.position.needsUpdate=true;
+  }
+  /* lightning: a quick moon-light pop, then thunder a beat later */
+  thunderT-=dt;
+  if(thunderT<=0 && S.mode==='play'){
+    thunderT=9+Math.random()*16; lightning=1;
+    setTimeout(()=>{ if(A.on) sfxNoise(1.1,90,0.7,'lowpass'); }, 500+Math.random()*900);
+  }
+  if(lightning>0){
+    lightning=Math.max(0,lightning-dt*3.2);
+    if(S.curtainOpen) moon.intensity = (S.power?1.1:0.22) + lightning*(Math.random()<0.5?3.5:1.2);
+  }
+}
 
 /* =========================================================
    7. THE ENTITY  -  rigged limbs + walk cycle animation
@@ -1272,6 +1591,8 @@ const SFX={
   doorOpen:()=>sfxNoise(0.7,300,0.4,'lowpass'),
   creak:()=>sfxTone(320,0.9,'sawtooth',0.05,120),
   hit:()=>{ sfxNoise(0.5,120,0.9,'lowpass'); sfxTone(70,0.8,'sine',0.4,40); },
+  screech:()=>{ sfxNoise(0.9,2400,0.8,'highpass'); sfxTone(1600,0.7,'sawtooth',0.3,-900);
+                sfxNoise(0.6,180,0.9,'lowpass'); },
   win:()=>{ [392,523,659].forEach((f,i)=>setTimeout(()=>sfxTone(f,0.7,'triangle',0.18),i*220)); }
 };
 function setSound(on){
@@ -1297,7 +1618,8 @@ const S={ mode:'menu', overlay:null, flashOn:false, battery:100, nerve:100, minu
   /* ---- night list (chores) + cupboard latch ---- */
   chores:{}, plateDirty:false, curtainOpen:true, bolted:false,
   latched:false, rattle:0, rattleAt:0, tried:false,
-  practice:false };
+  scareActive:false, scareDone:false, scareT:0, hard:false, upSeen:false,
+  practice:false, freecam:false };
 const MIN_PER_SEC=2/30;      // 30 real seconds = 2 minutes on the clock
 const DAWN=420;              // 6:00 AM
 const CURFEW_SHUT=300;       // 4:00 AM - after this the front door stays shut
@@ -1328,6 +1650,7 @@ function enterPlay(){
 }
 function backToMenu(){
   if(S.mode==='dead'||S.mode==='won') return;
+  S.freecam=false;
   S.mode='menu'; document.body.classList.remove('playing'); $('menu').style.display='flex';
   if(!IS_TOUCH) controls.unlock();
 }
@@ -1363,7 +1686,7 @@ function bindTouch(){
     if(e.pointerId!==TOUCH.lookId) return;
     const dx=e.clientX-TOUCH.lastX, dy=e.clientY-TOUCH.lastY;
     TOUCH.lastX=e.clientX; TOUCH.lastY=e.clientY;
-    turnCamera(dx*0.0045, dy*0.0045);
+    turnCamera(dx*0.0045*SENS, dy*0.0045*SENS);
   });
   const endLook=e=>{ if(e.pointerId===TOUCH.lookId) TOUCH.lookId=null; };
   look.addEventListener('pointerup',endLook);
@@ -1390,6 +1713,9 @@ if(IS_TOUCH) bindTouch();
 addEventListener('pointerdown',()=>audioInit(),{once:true});
 $('btnStart').onclick=()=>{ SFX.click(); audioInit(); startNight(false); };
 $('btnPractice').onclick=()=>{ SFX.click(); audioInit(); startNight(true); };
+$('btnSkip').onclick=()=>{ SFX.click(); audioInit(); startNight(false,true); };
+$('btnFreecam').onclick=()=>{ SFX.click(); audioInit(); startFreecam(); };
+$('btnNightmare').onclick=()=>{ SFX.click(); audioInit(); startNight(false,false,true); };
 $('btnStory').onclick=()=>{ SFX.click(); showPanel('pStory'); };
 $('btnRules').onclick=()=>{ SFX.click(); showPanel('pRules'); };
 $('btnHow').onclick  =()=>{ SFX.click(); showPanel('pHow'); };
@@ -1397,6 +1723,72 @@ $('btnRetro').onclick=()=>{ SFX.click(); retro=!retro;
   document.body.classList.toggle('retro',retro);
   $('retroState').textContent=retro?'ON':'OFF'; resize(); };
 $('btnSound').onclick=()=>{ audioInit(); setSound(!A.on); SFX.click(); };
+
+/* ---- PERFORMANCE MODE: drop bloom, shadow cost + pixel ratio for weak laptops ---- */
+function applyPerf(announce){
+  localStorage.setItem('mc_perf', PERF?'1':'0');
+  if($('perfState')) $('perfState').textContent = PERF?'ON':'OFF';
+  /* cheaper shadows */
+  renderer.shadowMap.type = PERF ? THREE.BasicShadowMap : THREE.PCFSoftShadowMap;
+  const sz = PERF ? 1024 : (IS_TOUCH?512:2048);
+  [bulb,moon].forEach(L=>{ if(L&&L.shadow){ L.shadow.mapSize.set(sz,sz);
+    if(L.shadow.map){ L.shadow.map.dispose(); L.shadow.map=null; } } });
+  /* the moon + flashlight shadows are the most expensive - drop them in perf mode */
+  if(moon) moon.castShadow = !PERF;
+  if(!IS_TOUCH && flashlight) flashlight.castShadow = !PERF;
+  renderer.shadowMap.needsUpdate = true;
+  resize();                                     // re-apply pixel-ratio cap
+  if(announce && S.mode==='play') objective(PERF?'Performance mode ON - smoother, fewer effects.'
+                                                :'Performance mode OFF.');
+}
+$('btnPerf').onclick=()=>{ SFX.click(); PERF=!PERF; applyPerf(true); };
+applyPerf(false);
+
+/* ---- PWA install button (shown once the browser offers a prompt) ---- */
+if(window.__installEvt) $('btnInstall').style.display='';
+$('btnInstall').onclick=async()=>{ SFX.click();
+  const e=window.__installEvt; if(!e){ say&&null; return; }
+  e.prompt(); try{ await e.userChoice; }catch(err){}
+  window.__installEvt=null; $('btnInstall').style.display='none';
+};
+
+/* ---- SETTINGS: look sensitivity + brightness (persisted) ---- */
+let SENS=parseFloat(localStorage.getItem('mc_sens')||'1');
+let BRIGHT=parseFloat(localStorage.getItem('mc_bright')||'1');
+const BASE_EXPOSURE=1.05;
+function applySens(){ controls.pointerSpeed=SENS;
+  $('optSens').value=SENS; $('optSensV').textContent=SENS.toFixed(1); }
+function applyBright(){ renderer.toneMappingExposure=BASE_EXPOSURE*BRIGHT;
+  $('optBright').value=BRIGHT; $('optBrightV').textContent=BRIGHT.toFixed(1); }
+$('optSens').addEventListener('input',e=>{ SENS=parseFloat(e.target.value);
+  localStorage.setItem('mc_sens',SENS); applySens(); });
+$('optBright').addEventListener('input',e=>{ BRIGHT=parseFloat(e.target.value);
+  localStorage.setItem('mc_bright',BRIGHT); applyBright(); });
+applySens(); applyBright();
+
+/* ---- ENDINGS DISCOVERED tracker (localStorage) ---- */
+const END_DEFS=[
+  {k:'survived', t:'NIGHT 1 SURVIVED'},
+  {k:'guest',    t:'THE POLITE GUEST'},
+  {k:'shoes',    t:"ADA'S SHOES"},
+  {k:'waited',   t:'THE ONE WHO WAITED'},
+  {k:'dark',     t:'DARK ADAPTED'},
+  {k:'fourc',    t:'THE OPEN 4C DOOR'}
+];
+function getFound(){ try{ return JSON.parse(localStorage.getItem('mc_endings')||'{}'); }catch(e){ return {}; } }
+function recordEnding(k){
+  const f=getFound(); if(f[k]) return; f[k]=true;
+  localStorage.setItem('mc_endings',JSON.stringify(f)); renderEndings();
+}
+function renderEndings(){
+  const f=getFound();
+  const n=END_DEFS.filter(e=>f[e.k]).length;
+  $('endCount').textContent=n+' / '+END_DEFS.length;
+  $('endList').innerHTML=END_DEFS.map(e=>
+    '<div style="color:'+(f[e.k]?'#cdddff':'#4b5468')+'">'+
+    (f[e.k]?'\u25c6 '+e.t:'\u25c7 ? ? ?')+'</div>').join('');
+}
+renderEndings();
 document.querySelectorAll('[data-close]').forEach(el=>{
   el.onclick=()=>{ SFX.click(); hidePanel(); };
 });
@@ -1406,21 +1798,32 @@ function hidePanel(){
   $(S.overlay).style.display='none'; S.overlay=null;
   if(S.mode==='play'&&!IS_TOUCH) controls.lock();
 }
-function startNight(practice){
-  S.practice=!!practice;
+function startNight(practice,skip,hard){
+  S.practice=!!practice; S.freecam=false; S.hard=!!hard;
   S.power=true; powerBack();
   S.minutes=0; S.timeCap=S.practice?0:4;      // 11:00 PM, stops at 11:04
   S.usedLight=false; S.knockDoor=null; S.knockN=0; S.dawnHide=0;
   S.dev=false; devRoom.visible=false;
   S.frontOpen=false; S.heatT=0; S.carrying=false;
+  S.dawnWait=0; S._dawnWarned=false; S.fourCOpen=false;
   HALLD.t=0; HALLD.warn=0;
   S.chores={}; S.plateDirty=false; S.curtainOpen=true; S.bolted=false;
   S.latched=false; S.tried=false; S.rattle=0; showChores(false);
   doorPivot.rotation.y=0;
+  S.scareActive=false; S.scareDone=false; S.scareT=0;
+  scare.visible=false; scareLight.intensity=0;
+  S.upSeen=false;
   mwGlass.material.emissiveIntensity=0; mwLight.intensity=0;
   hidePanel(); enterPlay();
   objective(S.practice?'PRACTICE - explore. Nothing comes tonight.'
-                      :'Read the rules on the fridge');
+                      :(S.hard?'NIGHTMARE - read the rules. It already knows you are here.'
+                              :'Read the rules on the fridge'));
+  if(S.hard) say('NIGHTMARE. It hunts faster tonight, and your nerve breaks sooner. Do not look.',5600);
+  if(skip){
+    say('Skipping ahead to 5:00 AM\u2026',2600);
+    fallAsleep();
+    return;
+  }
   if(S.practice){
     say('Practice mode. The clock is frozen at 11:00 and the hallway is empty.',5200);
   } else {
@@ -1438,6 +1841,54 @@ function startNight(practice){
       intro.forEach(l=>setTimeout(()=>{ if(S.mode==='play'&&S.stage==='intro') say(l[0],l[1]); },l[2]));
     }
   }
+}
+
+/* =========================================================
+   9b. FREE CAMERA MODE  (spectator fly-through, no danger)
+========================================================= */
+function startFreecam(){
+  S.freecam=true; S.practice=false; S.hard=false;
+  S.power=true; powerBack();
+  S.frontOpen=true; S.hallLightOn=true; S.tvOn=true; S.curtainOpen=true;
+  S.hiding=false; S.sitting=false; S.carrying=false; S.knocking=false;
+  S.stage='freecam'; S.timeCap=null; S.minutes=0;
+  S.nerve=100; S.battery=100;
+  S.scareActive=false; S.scareDone=false; S.scareT=0; S.upSeen=false;
+  entity.visible=false; entityEyes.intensity=0;
+  devRoom.visible=false; S.dev=false;
+  showChores(false);
+  document.body.classList.remove('hiding');
+  hidePanel(); enterPlay();
+  camera.position.set(0,1.6,3.0);
+  objective('FREE CAMERA \u2014 WASD fly \u00b7 SPACE up \u00b7 C/Ctrl down \u00b7 SHIFT faster \u00b7 ESC menu');
+  say('Free camera. Nothing can see you. Fly anywhere \u2014 the flat, the hallway, '+
+      'even out through the walls. [F] toggles the light.',6200);
+}
+const FLY=new THREE.Vector3();
+function freeMove(dt){
+  if(S.mode!=='play'||S.overlay) return;
+  let f=0,s=0,up=0;
+  if(keys['KeyW']||keys['ArrowUp'])    f+=1;
+  if(keys['KeyS']||keys['ArrowDown'])  f-=1;
+  if(keys['KeyD']||keys['ArrowRight']) s+=1;
+  if(keys['KeyA']||keys['ArrowLeft'])  s-=1;
+  if(keys['Space']) up+=1;
+  if(keys['ControlLeft']||keys['ShiftRight']||keys['KeyC']) up-=1;
+  if(IS_TOUCH){
+    if(Math.abs(TOUCH.my)>0.12) f+=-TOUCH.my;
+    if(Math.abs(TOUCH.mx)>0.12) s+= TOUCH.mx;
+    if(TOUCH.run) up+=1;
+  }
+  const fast=keys['ShiftLeft']?2.6:1;
+  const spd=4.5*fast;
+  camera.getWorldDirection(FLY); FLY.normalize();
+  rightV.copy(FLY).cross(UP).normalize();
+  const p=camera.position;
+  p.x += (FLY.x*f + rightV.x*s)*spd*dt;
+  p.z += (FLY.z*f + rightV.z*s)*spd*dt;
+  p.y += (FLY.y*f + up)*spd*dt;
+  p.y = THREE.MathUtils.clamp(p.y, 0.15, ROOM.h+6);
+  $('state').textContent='free camera';
 }
 
 /* =========================================================
@@ -1467,7 +1918,7 @@ function labelFor(o){
 }
 function visOK(o){ let n=o; while(n){ if(!n.visible) return false; n=n.parent; } return true; }
 function updateFocus(){
-  if(S.mode!=='play'||S.overlay){ $('prompt').style.display='none'; focus=null; return; }
+  if(S.mode!=='play'||S.overlay||S.freecam){ $('prompt').style.display='none'; focus=null; return; }
   if(S.hiding){
     focus=null;
     $('prompt').textContent = IS_TOUCH
@@ -1770,6 +2221,14 @@ function sitDown(){
   lines.forEach(l=>setTimeout(()=>{ if(S.stage==='eating') say(l[0],4000); },l[1]));
   setTimeout(()=>{ if(S.stage==='eating') beginChores(); },24000);
 }
+function skipBeat(){
+  if(S.mode!=='play'||S.overlay||S.practice||S.freecam) return;
+  const pre=['intro','getfood','heat','heating','collect','couch','eating','chores'];
+  if(pre.indexOf(S.stage)<0){ say('Nothing to skip \u2014 the night is already here.'); return; }
+  S.fridgeOpen=false; S.heatT=0;
+  say('You skip ahead. Eyes heavy, you head for the couch\u2026',2600);
+  fallAsleep();
+}
 function fallAsleep(){
   S.stage='sleep'; S.carrying=false; showChores(false);
   $('fade').style.opacity=1;
@@ -1818,6 +2277,7 @@ function momArrives(){
   if(!S.usedLight && !S.practice){ secretEnding('dark'); return; }
   S.stage='credits'; S.mode='won';
   S.hiding=false; document.body.classList.remove('hiding');
+  recordEnding('survived');
   powerBack(); SFX.doorOpen(); SFX.win();
   entity.visible=false; entityEyes.intensity=0;
   document.body.classList.remove('playing');
@@ -1829,12 +2289,21 @@ function momArrives(){
 
 /* one hide round: knock, 5 s to get in, 6 s to stay in */
 function updateScript(dt){
-  if(S.mode!=='play'||S.overlay||S.practice||S.dev) return;
+  if(S.mode!=='play'||S.overlay||S.practice||S.dev||S.freecam) return;
 
   if(S.stage==='dawn' && S.hiding){
     S.dawnHide+=dt;
     if(S.dawnHide>=60) secretEnding('waited');
     return;
+  }
+
+  /* --- 6:00 AM, not hiding: you MUST let Mom in. Wait too long and Mom is
+         gone by the time you reach the door -- the 4C door opens instead. --- */
+  if(S.stage==='dawn' && !S.hiding){
+    S.dawnWait=(S.dawnWait||0)+dt;
+    if(!S._dawnWarned && S.dawnWait>=18){ S._dawnWarned=true; SFX.knock();
+      say('Mom knocks again, harder. "Leo? It is six, open up." Answer the FRONT door now.',5200); }
+    if(S.dawnWait>=44){ fourCEnding(); return; }
   }
 
   if(S.stage==='night'){
@@ -1881,6 +2350,7 @@ function updateScript(dt){
         S.minutes=Math.min(DAWN-6,WAKE+S.round*11);
         if(S.round>=S.ROUNDS){
           S.stage='dawn'; S.minutes=DAWN;
+          S.dawnWait=0; S._dawnWarned=false;
           powerBack(); S.frontOpen=false; S.hallLightOn=false; SFX.flip();
           objective('6:00 AM - let Mom in');
           say('Every light in the flat comes back on at once. The front door is shut again.',5200);
@@ -1933,6 +2403,7 @@ addEventListener('keydown',e=>{
   if(S.overlay&&(e.code==='KeyE'||e.code==='Escape')){ hidePanel(); return; }
   if(S.mode!=='play') return;
   if(e.code==='KeyF') toggleFlashlight();
+  if(e.code==='KeyK') skipBeat();
   if(e.code==='KeyQ') toggleLatch();
   if(e.code==='KeyE') interact();
 });
@@ -1961,7 +2432,18 @@ function solid(x,z){
     if(Math.abs(x-b.x)<b.hw+RAD && Math.abs(z-b.z)<b.hd+RAD) return true;
   return false;
 }
+
+/* floor height under a point: 0 in the flat, rising up the stair treads to the upper room */
+function groundAt(x,z){
+  if(Math.abs(x) < UP_HALF+0.1 && z <= LAND_END+0.1 && z >= UP_END-0.3) return UP_FLOOR;   // upper room
+  if(Math.abs(x) < stepW/2+0.1 && z <= stepZ0+0.2 && z >= LAND_END-0.3){                    // staircase ramp
+    const climb = THREE.MathUtils.clamp((stepZ0 - z)/stepRun, 0, STEPS) * stepRise;
+    return Math.min(UP_FLOOR, 0.125 + climb);
+  }
+  return 0;
+}
 function move(dt){
+  if(S.freecam){ freeMove(dt); return; }
   if(S.mode!=='play'||S.overlay||S.hiding||S.sitting){ return; }
   let f=0,s=0;
   if(keys['KeyW']||keys['ArrowUp'])    f+=1;
@@ -1986,20 +2468,28 @@ function move(dt){
 
     /* two zones: the kitchen box and the hallway corridor.
        The north wall can only be crossed through the doorway gap (|x| < 1.4). */
-    const HALL_HALF = 1.4, HALL_END = -18.6, THRESH = -ROOM.d/2;
-    const inHallNow = p.z < THRESH;
+    const HALL_HALF = 1.4, THRESH = -ROOM.d/2;
     if(S.dev){
       p.x = THREE.MathUtils.clamp(nx, DEV.x-DEV.hw+RAD, DEV.x+DEV.hw-RAD);
       p.z = THREE.MathUtils.clamp(nz, DEV.z-DEV.hd+RAD, DEV.z+DEV.hd-RAD);
     } else {
-      /* the hallway is outside the flat: you can only cross the open front door */
-      const gapOK = S.frontOpen && nx>DOOR_GAP[0]+RAD && nx<DOOR_GAP[1]-RAD;
-      if(inHallNow){
+      /* zones: the flat, the corridor, the stairwell landing, and the upper room */
+      const gapOK  = S.frontOpen && nx>DOOR_GAP[0]+RAD && nx<DOOR_GAP[1]-RAD;
+      const landGap = nx>-HALL_HALF+RAD && nx<HALL_HALF-RAD;
+      const inMouth = Math.abs(nx) < UP_MOUTH-RAD;                 // the doorway at the stair top
+      if(p.z < LAND_END){                       // upper room (top of the stairs)
+        p.x = THREE.MathUtils.clamp(nx, -UP_HALF+RAD, UP_HALF-RAD);
+        p.z = THREE.MathUtils.clamp(nz, UP_END+RAD, inMouth ? LAND_Z-RAD : LAND_END-RAD);
+      } else if(p.z < LAND_Z){                   // stairwell landing + staircase
+        p.x = THREE.MathUtils.clamp(nx, -LAND_HALF+RAD, LAND_HALF-RAD);
+        const upOK = inMouth && groundAt(nx,nz) > UP_FLOOR-0.35;   // only pass north once at the top
+        p.z = THREE.MathUtils.clamp(nz, upOK ? UP_END+RAD : LAND_END+RAD, landGap ? THRESH-RAD : LAND_Z-RAD);
+      } else if(p.z < THRESH){                   // communal corridor
         p.x = THREE.MathUtils.clamp(nx, -HALL_HALF+RAD, HALL_HALF-RAD);
-        p.z = THREE.MathUtils.clamp(nz, HALL_END+RAD, gapOK ? ROOM.d/2-RAD : THRESH-RAD);
-      } else {
+        p.z = THREE.MathUtils.clamp(nz, LAND_END+RAD, gapOK ? ROOM.d/2-RAD : THRESH-RAD);
+      } else {                                  // the flat
         p.x = THREE.MathUtils.clamp(nx, -ROOM.w/2+RAD, ROOM.w/2-RAD);
-        p.z = THREE.MathUtils.clamp(nz, gapOK ? HALL_END+RAD : THRESH+RAD, ROOM.d/2-RAD);
+        p.z = THREE.MathUtils.clamp(nz, gapOK ? LAND_END+RAD : THRESH+RAD, ROOM.d/2-RAD);
       }
     }
 
@@ -2015,8 +2505,9 @@ function move(dt){
     bob+=dt*(running?13:9);
     if(Math.floor(bob/Math.PI)!==prevStep) sfxNoise(0.09,900,0.1,'bandpass');   // one tap per step
   }
-  $('state').textContent = p.z<-ROOM.d/2 ? 'hallway' : 'kitchen';
-  p.y = 1.55 + Math.sin(bob)*0.035 + Math.sin(breathe*1.7)*0.012 + S.knockShake*Math.random()*0.02;
+  $('state').textContent = p.z<LAND_END ? 'upstairs' : (p.z<LAND_Z ? 'stairwell' : (p.z<-ROOM.d/2 ? 'hallway' : 'kitchen'));
+  const gy = groundAt(p.x,p.z);
+  p.y = gy + 1.55 + Math.sin(bob)*0.035 + Math.sin(breathe*1.7)*0.012 + S.knockShake*Math.random()*0.02;
 }
 
 /* flashlight sways behind the look direction (inertia) */
@@ -2166,23 +2657,31 @@ const ENDINGS={
       'Three is polite. Three is practice.<br><br>'+
       'Something on the other side knocks back, exactly in time with you, and then '+
       'says thank you in your grandmother\u2019s voice. The lock turns from the inside.<br><br>'+
-      'ENDING 1 OF 4 &mdash; you invited it.' },
+      'ENDING &mdash; you invited it.' },
   shoes:{ t:"ADA'S SHOES",
     s:'At the dead end of the hallway, in your own torchlight, there is a pair of small '+
       'shoes still laced, pointing at the wall.<br>Two weeks of dust. No footprints '+
       'leading to them.<br><br>You turn around and the hallway is one door longer than it was.<br><br>'+
-      'ENDING 2 OF 4 &mdash; you found what the police missed.' },
+      'ENDING &mdash; you found what the police missed.' },
   waited:{ t:'THE ONE WHO WAITED',
     s:'Six o\u2019clock came, and the knocking was Mom, and you stayed in the cupboard '+
       'with the latch shut anyway.<br><br>She calls your name for a while. Then two voices '+
       'call it together. Then twenty.<br>You do not open the door. You never open the door again.<br><br>'+
-      'ENDING 3 OF 4 &mdash; the rules kept you, and kept you, and kept you.' },
+      'ENDING &mdash; the rules kept you, and kept you, and kept you.' },
   dark:{ t:'DARK ADAPTED',
-    s:'Five knocks, five hides, and you never once switched the flashlight on.<br>'+
+    s:'Four knocks, four hides, and you never once switched the flashlight on.<br>'+
       'It spent the whole night looking for a boy who made no light and no sound.<br><br>'+
       'Mom opens the door at 6:00 AM and says you must have slept right through it.<br>'+
       'You did not. You have simply stopped needing to see.<br><br>'+
-      'ENDING 4 OF 4 &mdash; the quiet ending.' }
+      'ENDING &mdash; the quiet ending.' },
+  fourc:{ t:'THE OPEN 4C DOOR',
+    s:'Six o’clock came. Mom knocked, and knocked, and used her key.<br>'+
+      'You did not open the front door in time — and by the time you reached it, '+
+      'the knocking had stopped.<br><br>'+
+      'Down the hall, the door of 4C swings open on its own. Ada’s door. '+
+      'The one that has been locked since the fire.<br>'+
+      'Something steps out of it wearing Mom’s coat, and starts counting the doors back toward 4B.<br><br>'+
+      'ENDING &mdash; you left the only real door shut too long.' }
 };
 function secretEnding(k){
   if(S.mode==='dead'||S.mode==='won') return;
@@ -2190,6 +2689,7 @@ function secretEnding(k){
   S.hiding=false; S.sitting=false;
   document.body.classList.remove('hiding');
   entity.visible=false; entityEyes.intensity=0;
+  recordEnding(k);
   const e=ENDINGS[k];
   $('secretTitle').textContent=e.t;
   $('secretText').innerHTML=e.s;
@@ -2202,12 +2702,21 @@ function secretEnding(k){
   if(k==='guest'){ SFX.knock(); SFX.whisper(); }
   else if(k==='shoes'){ SFX.creak(); SFX.whisper(); }
   else if(k==='waited'){ SFX.whisper(); }
+  else if(k==='fourc'){ SFX.creak(); SFX.knock(); SFX.whisper(); }
   else SFX.win();
+}
+
+/* the 6 AM fail: Mom leaves, the 4C door opens instead */
+function fourCEnding(){
+  if(S.mode!=='play') return;
+  S.fourCOpen=true;
+  secretEnding('fourc');
 }
 
 function winGame(){
   if(S.mode==='dead'||S.mode==='won') return;
   S.mode='won'; SFX.win();
+  recordEnding('survived');
   S.hiding=false; document.body.classList.remove('hiding');
   ambient.intensity=1.5; hemi.intensity=1.2; scene.fog.density=0.018;
   scene.background.setHex(0x8fa8d8);
@@ -2222,6 +2731,7 @@ function winGame(){
 ========================================================= */
 /* atmosphere only - the dangerous beats are all scripted in section 11b */
 function spawnEvent(){
+  if(S.freecam) return;
   S.nextEvent=20+Math.random()*18;
   if(S.practice) return;
   const r=Math.random();
@@ -2255,6 +2765,13 @@ function spawnEvent(){
 const lookDir=new THREE.Vector3();
 function updateMeters(dt){
   if(S.mode!=='play'||S.overlay) return;
+  if(S.freecam){
+    $('clock').textContent='FREE CAM';
+    $('batBar').firstElementChild.style.width='100%';
+    $('sanBar').firstElementChild.style.width='100%';
+    $('vblood').style.opacity='0';
+    return;
+  }
   if(S.stage==='heating' && !S.dev){
     S.heatT+=dt;
     if(S.heatT>=16) mwDone();
@@ -2295,7 +2812,7 @@ const HALL_WARN=[
   [26,'Every door unlocks at once, very quietly. GET INSIDE.']
 ];
 function updateHall(dt){
-  if(S.mode!=='play'||S.overlay||S.practice||S.dev){ return; }
+  if(S.mode!=='play'||S.overlay||S.practice||S.dev||S.freecam){ return; }
   const inHall = camera.position.z < -ROOM.d/2 && !S.hiding;
   if(!inHall){
     if(HALLD.t>0){
@@ -2322,6 +2839,7 @@ function updateHall(dt){
   }
 }
 function updateEntity(dt,t){
+  if(S.freecam){ entity.visible=false; entityEyes.intensity=0; entity.position.set(0,0,-13); return; }
   if(S.dev){ entity.visible=false; entityEyes.intensity=0; return; }
   /* practice mode: it never comes, not even when the hallway light is on */
   if(S.practice){
@@ -2380,9 +2898,10 @@ function updateEntity(dt,t){
     const staring = lookDir.z<-0.55 && camera.position.z<2.0;
     if(staring){
       walking=true;
-      entity.position.z += dt*1.5;                  // it closes in while watched
+      const hd=S.hard?1.75:1;
+      entity.position.z += dt*1.5*hd;                  // it closes in while watched
       entity.position.x += (0-entity.position.x)*dt*2;
-      S.nerve=Math.max(0,S.nerve-dt*15);
+      S.nerve=Math.max(0,S.nerve-dt*15*hd);
       if(Math.random()<dt*1.5) SFX.whisper();
       if(entity.position.z>-9&&Math.random()<dt*0.6)
         say('It has not moved its feet. It is just closer.',2600);
@@ -2394,6 +2913,53 @@ function updateEntity(dt,t){
     }
   } else if(calm) S.nerve=Math.min(100,S.nerve+dt*6);
   animateEntity(t,walking);
+}
+
+/* =========================================================
+   15b. STAIRWELL JUMPSCARE
+========================================================= */
+function triggerScare(){
+  S.scareActive=true; S.scareDone=true; S.scareT=0;
+  scare.visible=true;
+  scare.position.set(0,UP_FLOOR+1.5,LAND_END-0.3);
+  vFlash(); SFX.screech(); S.knockShake=1.6;
+  say('SOMETHING COMES DOWN THE STAIRS.',2600);
+  if(!S.freecam && !S.practice){ $('vblood').style.opacity='0.9'; nerveHit(38); }
+}
+function updateScare(dt,t){
+  const canRun = (S.mode==='play' || S.freecam);
+  /* fade the sickly upstairs glow in as the player approaches the well */
+  const near = camera.position.z < -19.0;
+  upLight.intensity += ((near?2.2:0)-upLight.intensity)*Math.min(1,dt*3);
+  if((S.mode==='play'||S.freecam) && camera.position.z < LAND_END && !S.upSeen){
+    S.upSeen=true;
+    say('The upstairs flat. Empty for two weeks. Ada\u2019s shoes are still by the far wall, still laced.',5200);
+  }
+  if(canRun && !S.scareDone && !S.scareActive){
+    const climbing = groundAt(camera.position.x,camera.position.z) > 0.4;
+    const onStair  = camera.position.z < -22.0 && Math.abs(camera.position.x) < 2.4;
+    if(climbing || onStair) triggerScare();
+  }
+  if(S.scareActive){
+    S.scareT += dt;
+    const k = Math.min(1, S.scareT/0.55);
+    const startZ = LAND_END-0.3, startY = UP_FLOOR+1.5;
+    /* lunge down the stairs into the player's face */
+    const tz = camera.position.z + 1.1;
+    scare.position.z = startZ + k*(tz-startZ);
+    scare.position.x += (camera.position.x-scare.position.x)*Math.min(1,dt*9);
+    scare.position.y = startY - k*(startY-camera.position.y-0.05);
+    scare.lookAt(camera.position.x,camera.position.y,camera.position.z);
+    scare.rotation.z = Math.sin(t*34)*0.12;
+    scareLight.intensity = 5+Math.sin(t*42)*3;
+    if(S.scareT>1.15){
+      S.scareActive=false;
+      scare.visible=false; scareLight.intensity=0;
+      if(!S.freecam) $('vblood').style.opacity=String(Math.max(0,(45-S.nerve)/45*0.8));
+    }
+  } else {
+    scare.visible=false; scareLight.intensity=0;
+  }
 }
 
 /* =========================================================
@@ -2436,6 +3002,11 @@ function animateProps(dt,t){
       d.group.position.x = d.baseX + Math.sin(t*45)*0.01*d.shake; }
     else d.group.position.x = d.baseX;
   });
+  /* the 4C door swings open on the fail ending */
+  if(S.fourCOpen && hallDoors[0]){
+    const leaf=hallDoors[0].group.children[0];
+    if(leaf) leaf.rotation.y += (-1.25-leaf.rotation.y)*Math.min(1,dt*2.5);
+  }
   /* phone receiver rattles while ringing */
   receiver.position.y = 0.09 + (S.calling?Math.abs(Math.sin(t*26))*0.012:0);
   /* curtain wave */
@@ -2485,6 +3056,7 @@ function menuCamera(t){
    17. LOOP
 ========================================================= */
 const clock=new THREE.Clock();
+const perfProbe={frames:0,time:0,done:PERF};   // auto-detect slow hardware
 function animate(){
   requestAnimationFrame(animate);
   const dt=Math.min(0.05,clock.getDelta()), t=clock.elapsedTime;
@@ -2496,10 +3068,20 @@ function animate(){
   updateFocus();
   updateMeters(dt);
   updateEntity(dt,t);
+  updateScare(dt,t);
   animateProps(dt,t);
+  updateAtmosphere(dt,t);
   if(A.humGain) A.humGain.gain.value = 0.05/(1+camera.position.distanceTo(fridge.position)*0.25);
   document.querySelectorAll('.hands').forEach(h=>h.classList.toggle('show',S.carrying&&S.mode==='play'&&!S.sitting));
-  if(!retro && composer){
+  /* adaptive: if the first few seconds run slow, switch to performance mode once */
+  if(!PERF && !perfProbe.done){
+    perfProbe.frames++; perfProbe.time+=dt;
+    if(perfProbe.time>=3){
+      perfProbe.done=true;
+      if(perfProbe.frames/perfProbe.time < 40){ PERF=true; applyPerf(true); }
+    }
+  }
+  if(!retro && !PERF && composer){
     if(gradePass){
       gradePass.uniforms.uTime.value=t;
       const fear = (S.mode==='play')? Math.max(0,(55-S.nerve)/55) : 0;
@@ -2532,6 +3114,7 @@ if(IS_TOUCH){
 objective('Read the rules on the fridge');
 animate();
 window.__gameBooted=true;
+if(window.__dismissBoot) window.__dismissBoot();
 </script>
 </body>
 </html>
