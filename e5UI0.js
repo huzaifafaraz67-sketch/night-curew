@@ -84,14 +84,28 @@
     return { t: cs.paddingTop, r: cs.paddingRight, b: cs.paddingBottom, l: cs.paddingLeft };
   }
 
-  /* ---- resize the 3D renderer + camera to match the window ---- */
+  /* ---- resize the 3D view to match the window ----
+     The game ships its own resize() that already handles renderer, camera,
+     EffectComposer, GTAO + grade passes and its own capped pixel-ratio. When
+     that exists we ONLY trigger it and touch nothing else \u2014 driving the
+     renderer/composer ourselves would fight its pixel-ratio cap and leave the
+     post-processing buffers mismatched (the laptop/phone sizing bug). We only
+     size things manually as a fallback for a game with no resize hook. ---- */
   function resizeRenderer (w, h, dpr) {
     var G = window.__GAME;
     if (!G) return;
     try {
+      if (typeof G.resize === 'function')   { G.resize();   return; }
+      if (typeof G.onResize === 'function') { G.onResize(w, h, dpr); return; }
+
+      // --- fallback only: no resize hook on the game ---
       if (G.renderer && G.renderer.setSize) {
         if (G.renderer.setPixelRatio) G.renderer.setPixelRatio(dpr);
         G.renderer.setSize(w, h, true);
+      }
+      if (G.composer && G.composer.setSize) {
+        if (G.composer.setPixelRatio) G.composer.setPixelRatio(dpr);
+        G.composer.setSize(w, h);
       }
       var cam = G.camera;
       if (cam) {
@@ -103,8 +117,6 @@
         }
         if (cam.updateProjectionMatrix) cam.updateProjectionMatrix();
       }
-      // let the game run its own resize hook too, if it has one
-      if (typeof G.onResize === 'function') G.onResize(w, h, dpr);
     } catch (e) { /* never let a resize break the frame loop */ }
   }
 
